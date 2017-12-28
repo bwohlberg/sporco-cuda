@@ -1,7 +1,6 @@
 future
 numpy
-pytest-runner
-pytest
 sphinx>=1.2.2
+numpydoc
 sphinx_tabs
 sphinx_fontawesome
