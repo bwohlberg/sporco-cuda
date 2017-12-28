@@ -43,6 +43,8 @@ extensions = [
 # generate autosummary pages
 autosummary_generate = True
 
+autodoc_mock_imports = ['sporco_cuda.util', 'sporco_cuda.cbpdn']
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -123,7 +125,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+#html_theme = 'alabaster'
 html_theme = "haiku"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -308,14 +310,3 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://sporco.rtfd.io/en/latest/': None}
-
-
-
-# Sort members by type
-#autodoc_member_order = 'groupwise'
-autodoc_member_order = 'bysource'
-autodoc_docstring_signature = True
-#autodoc_default_flags = ['members', 'inherited-members', 'show-inheritance']
-
-
-

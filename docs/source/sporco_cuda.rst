@@ -9,9 +9,3 @@ Submodules
 
    sporco_cuda.cbpdn
    sporco_cuda.util
-
-
-.. automodule:: sporco_cuda
-    :members:
-    :undoc-members:
-    :show-inheritance:
