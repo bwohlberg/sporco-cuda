@@ -1,6 +1,12 @@
 SPORCO-CUDA
 ===========
 
+
+.. image:: https://readthedocs.org/projects/sporco-cuda/badge/?version=latest
+    :target: http://sporco-cuda.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+
 SPORCO-CUDA provides GPU-accelerated versions of selected convolutional sparse coding algorithms in the `SPORCO <https://github.com/bwohlberg/sporco>`__ package. It is a component of `SPORCO`, and is subject to the same license, but is made available as an optional extension to avoid complicating the prerequisites and build/install procedure for the main part of `SPORCO`.
 
 
