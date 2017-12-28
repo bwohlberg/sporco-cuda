@@ -1,0 +1,5 @@
+future
+numpy
+sporco
+pytest-runner
+pytest

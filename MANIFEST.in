@@ -1,0 +1,20 @@
+include MANIFEST.in
+include setup.py
+include setup.cfg
+include pytest.ini
+include README.rst
+include LICENSE
+include CHANGES.rst
+include CONTRIBUTORS.rst
+include requirements.txt
+
+recursive-include sporco_cuda *.pyx
+recursive-include examples *.py
+recursive-include docs Makefile *.py *.rst *.css
+
+include sporco_cuda/__init__.py
+include sporco_cuda/src/*.h
+include sporco_cuda/src/*.cu
+include sporco_cuda/tests/*.py
+
+prune docs/build

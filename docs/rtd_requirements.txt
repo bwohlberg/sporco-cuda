@@ -1,0 +1,7 @@
+future
+numpy
+pytest-runner
+pytest
+sphinx>=1.2.2
+sphinx_tabs
+sphinx_fontawesome
