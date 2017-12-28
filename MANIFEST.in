@@ -10,7 +10,7 @@ include requirements.txt
 
 recursive-include sporco_cuda *.pyx
 recursive-include examples *.py
-recursive-include docs Makefile *.py *.rst *.css
+recursive-include docs *.py *.rst *.css
 
 include sporco_cuda/__init__.py
 include sporco_cuda/src/*.h
