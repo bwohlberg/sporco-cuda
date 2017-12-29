@@ -83,7 +83,7 @@ The primary requirements are Python, `sporco <https://github.com/bwohlberg/sporc
 Installation
 ------------
 
-See the `installation instructions <http://sporco-cuda.rtfd.io/install.html>`_ in the `online documentation <http://sporco-cuda.rtfd.io/>`_.
+See the `installation instructions <http://sporco-cuda.rtfd.io/en/latest/install.html>`_ in the `online documentation <http://sporco-cuda.rtfd.io/>`_.
 
 
 
