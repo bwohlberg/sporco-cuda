@@ -1,17 +1,21 @@
 Installation
 ============
 
-The simplest way to install the most recent release of SPORCO from
-`PyPI <https://pypi.python.org/pypi/sporco-cuda/>`_ is
+The `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_ is required for all installation methods. `Installation guides <http://docs.nvidia.com/cuda/index.html#installation-guides>`_ are available for Linux, MacOS, and Windows.
+
+
+The simplest way to install the most recent release of SPORCO-CUDA is from
+`PyPI <https://pypi.python.org/pypi/sporco-cuda/>`_ via ``pip``. The ``CUDAHOME`` environment variable must be set so that the build process can find the local CUDA toolkit installation. For example, under Linux with the CUDA toolkit installed at ``/usr/local/cuda-9.1``
 
 ::
 
-    pip install sporco-cuda
+    CUDAHOME=/usr/local/cuda-9.1 pip install sporco-cuda
 
 
-SPORCO can also be installed from source, either from the development
-version from `GitHub <https://github.com/bwohlberg/sporco-cuda>`_, or from
-a release source package downloaded from `PyPI
+SPORCO-CUDA can also be manually installed from source, either from
+the development version from `GitHub
+<https://github.com/bwohlberg/sporco-cuda>`_, or from a release source
+package downloaded from `PyPI
 <https://pypi.python.org/pypi/sporco-cuda/>`_.
 
 To install the development version from `GitHub
@@ -21,20 +25,21 @@ To install the development version from `GitHub
 
     git clone https://github.com/bwohlberg/sporco-cuda.git
 
-followed by
+followed by (again, assuming building under Linux with the CUDA toolkit installed at ``/usr/local/cuda-9.1``)
 
 ::
 
    cd sporco-cuda
+   export CUDAHOME=/usr/local/cuda-9.1
    python setup.py build
    python setup.py test
    python setup.py install
 
-Please report any test failures. The install command will usually have to be performed with root permissions, e.g. on Ubuntu Linux
+Please report any test failures. The install command will usually have to be performed with root permissions, e.g. under Linux
 
 ::
 
-   sudo -H pip install sporco-cuda
+   sudo -H CUDAHOME=/usr/local/cuda-9.1 pip install sporco-cuda
 
 or
 
@@ -96,10 +101,12 @@ Installation of these requirements is system dependent.
 
    .. group-tab:: :fa:`apple` Mac OS
 
-      Not yet tested under Mac OS
+      Not yet tested under Mac OS. If you build SPORCO-CUDA under Mac
+      OS, please submit details for inclusion here.
 
 
 
    .. group-tab:: :fa:`windows` Windows
 
-      Not yet tested under Windows
+      Not yet tested under Windows. If you build SPORCO-CUDA under
+      Windows, please submit details for inclusion here.
