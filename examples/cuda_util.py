@@ -15,12 +15,13 @@ from builtins import range
 import sporco_cuda.util as cu
 
 ndev = cu.device_count()
-print('Found %d CUDA devices' % ndev)
+print('Found %d CUDA device(s)' % ndev)
 if ndev > 0:
     print('Current device id: %d' % cu.current_device())
     mbc = 1024.0**2
+    print('Id   Model                 Total memory     Free Memory')
     for n in range(ndev):
         cu.current_device(n)
         mf, mt = cu.memory_info()
-        print('  device: %d   total mem.: %7.0f MB   free mem.: %7.0f MB' %
-              (n, mt/mbc, mf/mbc))
+        nm = cu.device_name(n)
+        print('%2d   %-20s   %8.0f MB     %8.0f MB' % (n, nm, mt/mbc, mf/mbc))

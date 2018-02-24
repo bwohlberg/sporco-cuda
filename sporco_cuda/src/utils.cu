@@ -164,6 +164,18 @@ cudaError_t get_memory_info(size_t* free, size_t* total) {
 }
 
 
+char* get_device_name(int dev) {
+  static cudaDeviceProp cdp;
+  cudaError_t cuError;
+
+  cuError = cudaGetDeviceProperties(&cdp, dev);
+  if (cuError == cudaSuccess)
+    return cdp.name;
+  else
+    return NULL;
+}
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
