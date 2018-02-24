@@ -16,7 +16,8 @@ SPORCO-CUDA
     :alt: Package License
 
 
-SPORCO-CUDA provides GPU-accelerated versions of selected convolutional sparse coding algorithms in the `SPORCO <https://github.com/bwohlberg/sporco>`__ package. It is a component of `SPORCO`, and is subject to the same license, but is made available as an optional extension to avoid complicating the prerequisites and build/install procedure for the main part of `SPORCO`.
+SPORCO-CUDA provides GPU-accelerated versions of selected convolutional sparse coding algorithms in the `SPORCO <https://github.com/bwohlberg/sporco>`__ package. It is a component of `SPORCO`, and is subject to the same license, but is made available as an optional extension to avoid complicating the prerequisites and build/install procedure for the main part of `SPORCO`. If you use this software for published work, please `cite it <http://sporco.readthedocs.io/en/latest/overview.html#citing>`__.
+
 
 
 Documentation

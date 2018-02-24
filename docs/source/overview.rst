@@ -1,7 +1,7 @@
 Overview
 ========
 
-SPORCO-CUDA is an extension package to the `SPORCO <http://sporco.rtfd.io>`__ package, providing GPU acceleration for selected algorithms.
+SPORCO-CUDA is an extension package to the `SPORCO <http://sporco.rtfd.io>`__ package, providing GPU acceleration for selected algorithms. It is a component of `SPORCO`, and is subject to the same license, but is made available as an optional extension to avoid complicating the prerequisites and build/install procedure for the main part of `SPORCO`. If you use this software for published work, please `cite it <http://sporco.readthedocs.io/en/latest/overview.html#citing>`__.
 
 
 .. _usage-section:
