@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017 by Brendt Wohlberg <brendt@ieee.org>
+# Copyright (C) 2017-2018 by Brendt Wohlberg <brendt@ieee.org>
 # All rights reserved. BSD 3-clause License.
 # This file is part of the SPORCO-CUDA package. Details of the copyright
 # and user license can be found in the 'LICENSE.txt' file distributed
@@ -41,7 +41,7 @@ D = util.convdicts()['G:12x12x72']
 lmbda = 1e-2
 mu = 1e-3
 opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': True, 'MaxMainIter': 20,
-                    'HighMemSolve': True, 'LinSolveCheck': True,
+                    'HighMemSolve': True, 'LinSolveCheck': False,
                     'RelStopTol': 2e-3, 'AuxVarObj': False,
                     'AutoRho': {'Enabled': False}})
 
@@ -55,7 +55,7 @@ print("ConvBPDNGradReg solve time: %.2fs" % b.timer.elapsed('solve'))
 t = util.Timer()
 with util.ContextTimer(t):
     X2 = cucbpdn.cbpdngrd(D, sh, lmbda, mu, opt)
-print("GPU ConvBPDNGrd solve time: %.2fs" % t.elapsed())
+print("GPU ConvBPDNGradReg solve time: %.2fs" % t.elapsed())
 print("GPU time improvement factor: %.1f" % (b.timer.elapsed('solve') /
                                              t.elapsed()))
 

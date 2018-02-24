@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017 by Brendt Wohlberg <brendt@ieee.org>
+# Copyright (C) 2017-2018 by Brendt Wohlberg <brendt@ieee.org>
 # All rights reserved. BSD 3-clause License.
 # This file is part of the SPORCO-CUDA package. Details of the copyright
 # and user license can be found in the 'LICENSE.txt' file distributed
@@ -39,7 +39,7 @@ D = util.convdicts()['G:12x12x72']
 # Set up ConvBPDN options
 lmbda = 1e-2
 opt = cbpdn.ConvBPDN.Options({'Verbose': True, 'MaxMainIter': 20,
-                    'HighMemSolve': True, 'LinSolveCheck': True,
+                    'HighMemSolve': True, 'LinSolveCheck': False,
                     'RelStopTol': 2e-3, 'AuxVarObj': False,
                     'AutoRho': {'Enabled': False}})
 
