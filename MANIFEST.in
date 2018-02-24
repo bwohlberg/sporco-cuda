@@ -9,7 +9,7 @@ include CONTRIBUTORS.rst
 include requirements.txt
 
 recursive-include sporco_cuda *.pyx
-recursive-include examples *.py
+recursive-include examples *.py *.rst
 recursive-include docs *.py *.rst *.css
 
 include sporco_cuda/__init__.py
