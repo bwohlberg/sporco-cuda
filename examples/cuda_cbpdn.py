@@ -17,7 +17,6 @@ import tempfile
 import numpy as np
 
 from sporco import util
-from sporco import plot
 from sporco.admm import cbpdn
 import sporco.metric as sm
 
@@ -25,11 +24,12 @@ import sporco_cuda.cbpdn as cucbpdn
 
 
 # Get test image
-url = 'https://www.math.purdue.edu/~lucier/PHOTO_CD/BMP_IMAGES/IMG0023.bmp'
+url = 'http://www.math.purdue.edu/~lucier/PHOTO_CD/D65_GREY_TIFF_IMAGES/'\
+      'IMG0023.tif'
 dir = os.path.join(tempfile.gettempdir(), 'images')
 if not os.path.exists(dir):
     os.mkdir(dir)
-pth = os.path.join(dir, 'kodim23.bmp')
+pth = os.path.join(dir, 'IMG0023.tif')
 if not os.path.isfile(pth):
     img = util.netgetdata(url)
     f = open(pth, 'wb')
@@ -39,7 +39,7 @@ if not os.path.isfile(pth):
 
 # Load demo image
 ei = util.ExampleImages(pth=dir)
-img = ei.image('kodim23.bmp', scaled=True, gray=True, zoom=0.5)
+img = ei.image('IMG0023.tif', scaled=True, zoom=0.5)
 
 
 # Highpass filter test image
@@ -62,5 +62,5 @@ opt = cbpdn.ConvBPDN.Options({'Verbose': True, 'MaxMainIter': 200,
 t = util.Timer()
 with util.ContextTimer(t):
     X = cucbpdn.cbpdn(D, sh, lmbda, opt)
-print("GPU ConvBPDN solve time: %.2fs" % t.elapsed())
 print("Image size: %d x %d" % sh.shape)
+print("GPU ConvBPDN solve time: %.2fs" % t.elapsed())
