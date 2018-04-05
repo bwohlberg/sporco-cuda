@@ -22,13 +22,6 @@ void default_opts(void *data){
   if (opt->Verbose == -1)        opt->Verbose = 0;
   if (opt->AutoRho == -1)        opt->AutoRho = 1;
 
-  if (opt->L1Weight[0]  == 0) {
-      opt->L1Weight[0] = 1.0;
-      opt->L1_WEIGHT_M_SIZE = 1;
-      opt->L1_WEIGHT_ROW_SIZE = 1;
-      opt->L1_WEIGHT_COL_SIZE = 1;
-  }
-
   if (opt->AuxVarObj == -1)      opt->AuxVarObj = 0;
 
   if (opt->AbsStopTol == -1)     opt->AbsStopTol = 0;
