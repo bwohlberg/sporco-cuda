@@ -7,17 +7,17 @@
 
 typedef struct AlgOpt {
 
-  int      MaxMainIter;
+  int     MaxMainIter;
 
-  float    rho;
-  float    RhoRsdlRatio;
-  float    RhoScaling;
-  float    RhoRsdlTarget;
-  float    RelaxParam;
-  float    AbsStopTol;
-  float    RelStopTol;
-  float*   L1Weight;
+  float   rho;
+  float   RhoRsdlRatio;
+  float   RhoScaling;
+  float   RhoRsdlTarget;
+  float   RelaxParam;
+  float   AbsStopTol;
+  float   RelStopTol;
 
+  float*  L1Weight;
   int     L1_WEIGHT_M_SIZE;
   int     L1_WEIGHT_ROW_SIZE;
   int     L1_WEIGHT_COL_SIZE;
