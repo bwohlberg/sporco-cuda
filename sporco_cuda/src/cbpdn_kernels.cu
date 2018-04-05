@@ -1131,7 +1131,7 @@ cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int fact
   float WLambdaV1, sum = 0.0;
   float4 X_temp, WLambda;
 
-  if (nL1Weight == 1) { 
+  if (nL1Weight == 1) {
      WLambdaV1 = L1Weight[0];
      WLambda = make_float4(WLambdaV1, WLambdaV1, WLambdaV1, WLambdaV1);
   }

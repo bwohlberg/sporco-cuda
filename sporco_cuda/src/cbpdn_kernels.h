@@ -5,13 +5,13 @@ __global__ void cuda_solvedbi_sm_vec4 (float2 * Out, float2 * ah,
 __global__ void cuda_solvedbi_sm (float2 * Out, float2 * ah, float2 * Dsf,
    float rho, float2 * YUf, float2 * c, int nRows, int nCols, int nFilts);
 
-__global__ void cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, 
+__global__ void cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X,
    float lambda, float *L1Weight, int nRows, int nCols, int nFilts, int nL1Weight);
 
-__global__ void cuda_Shrink_CalU_vec4_Vector(float *Y, float *U, float *X, 
+__global__ void cuda_Shrink_CalU_vec4_Vector(float *Y, float *U, float *X,
    float lambda, float *L1Weight, int nRows, int nCols, int nFilts);
 
-__global__ void cuda_Shrink_CalU_Vector(float *Y, float *U, float *X, 
+__global__ void cuda_Shrink_CalU_Vector(float *Y, float *U, float *X,
    float lambda, float *L1Weight, int nRows, int nCols, int nFilts);
 
 __global__ void cuda_Shrink_CalU_vec4 (float *Y, float *U, float *X,
@@ -63,10 +63,10 @@ __global__ void cuda_Fidelity_Term (float *Jdf, float2 * Df, float2 * Xf,
 __global__ void cuda_L1_Term_vec4 (float *d_JL1, float *X, float L1Weight,
    int factor, int nRows, int nCols, int nFilts);
 
-__global__ void cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, 
+__global__ void cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X,
    float* L1Weight, int factor, int nRows, int nCols, int nFilts, int nL1Weight);
 
-__global__ void cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight, 
+__global__ void cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight,
    int factor, int nRows, int nCols, int nFilts);
 
 __global__ void cuda_L1_Term_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
