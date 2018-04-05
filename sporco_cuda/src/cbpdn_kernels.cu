@@ -1108,7 +1108,7 @@ cuda_L1_Term_vec4(float *d_JL1, float *X, float L1Weight, int factor,
   }
 
   sum = blockReduceSum (sum);
-  sum *= L1Weight;
+  sum *= abs(L1Weight);
 
   if (threadIdx.x == 0)
     atomicAdd (d_JL1, sum);
@@ -1148,8 +1148,8 @@ cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int fact
 
 
       sum +=
-	 (abs(X_temp.x / factor)*WLambda.x + abs(X_temp.y / factor)*WLambda.y) +
-	 (abs(X_temp.z / factor)*WLambda.z + abs(X_temp.w / factor)*WLambda.w);
+	 (abs(WLambda.x * X_temp.x / factor) + abs(WLambda.y * X_temp.y / factor)) +
+	 (abs(WLambda.z * X_temp.z / factor) + abs(WLambda.w * X_temp.w / factor));
     }
 
 
@@ -1159,7 +1159,7 @@ cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int fact
       if (nL1Weight > 1)
 	WLambdaV1 = L1Weight[index];
 
-      sum += (WLambdaV1 * abs(X[index] / factor));
+      sum +=  abs(WLambdaV1 * X[index] / factor);
     }
 
   }
@@ -1197,10 +1197,8 @@ cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
       WLambda = L1Weight[k];
 
       sum +=
-	 (abs(X_temp.x / factor) + abs(X_temp.y / factor)) +
-	 (abs(X_temp.z / factor) + abs(X_temp.w / factor));
-
-      sum *= WLambda;
+	 (abs(WLambda * X_temp.x / factor) + abs(WLambda * X_temp.y / factor)) +
+	 (abs(WLambda * X_temp.z / factor) + abs(WLambda * X_temp.w / factor));
 
     }
 
