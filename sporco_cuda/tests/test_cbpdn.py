@@ -59,6 +59,25 @@ class TestSet01(object):
         D = np.random.randn(Nd, Nd, M).astype(np.float32)
         s = np.random.randn(Nr, Nc).astype(np.float32)
         lmbda = 1e-1
+        Wl1 = np.random.randn(1, 1, M).astype(np.float32)
+        Wl1[0] = 0.0
+        opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
+                    'L1Weight': Wl1, 'AutoRho': {'Enabled': False}})
+        b = cbpdn.ConvBPDN(D, s, lmbda, opt)
+        X1 = b.solve()
+        X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
+        assert(sm.mse(X1, X2) < 1e-8)
+
+
+
+    def test_04(self):
+        Nr = 32
+        Nc = 31
+        Nd = 5
+        M = 4
+        D = np.random.randn(Nd, Nd, M).astype(np.float32)
+        s = np.random.randn(Nr, Nc).astype(np.float32)
+        lmbda = 1e-1
         Wl1 = np.random.randn(Nr, Nc, M).astype(np.float32)
         opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
                     'L1Weight': Wl1, 'AutoRho': {'Enabled': False}})
@@ -69,7 +88,7 @@ class TestSet01(object):
 
 
 
-    def test_04(self):
+    def test_05(self):
         Nr = 32
         Nc = 31
         Nd = 5
@@ -87,7 +106,7 @@ class TestSet01(object):
 
 
 
-    def test_05(self):
+    def test_06(self):
         Nr = 32
         Nc = 31
         Nd = 5
@@ -107,7 +126,7 @@ class TestSet01(object):
 
 
 
-    def test_06(self):
+    def test_07(self):
         Nr = 32
         Nc = 31
         Nd = 5
@@ -127,7 +146,7 @@ class TestSet01(object):
 
 
 
-    def test_07(self):
+    def test_08(self):
         Nr = 32
         Nc = 31
         Nd = 5
@@ -147,7 +166,7 @@ class TestSet01(object):
 
 
 
-    def test_08(self):
+    def test_09(self):
         Nr = 32
         Nc = 31
         Nd = 5
