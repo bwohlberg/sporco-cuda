@@ -157,7 +157,7 @@ cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, f
   float absxV1, X_tempV1, U_tempV1, Y_tempV1, WLambdaV1;
   float4 absxV4, X_temp, U_temp, Y_temp, WLambda;
 
-  if (nL1Weight == 1) { 
+  if (nL1Weight == 1) {
      WLambdaV1 = lambda * L1Weight[0];
      WLambda = make_float4(WLambdaV1, WLambdaV1, WLambdaV1, WLambdaV1);
   }
@@ -171,9 +171,9 @@ cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, f
       U_temp = reinterpret_cast <float4 *>(U)[index];
       X_temp = reinterpret_cast <float4 *>(X)[index];
 
-      if (nL1Weight > 1){  
-        WLambda = reinterpret_cast <float4 *>(L1Weight)[index];
-        WLambda = cuCmulf_by_const_vec4(WLambda, lambda);
+      if (nL1Weight > 1){
+	WLambda = reinterpret_cast <float4 *>(L1Weight)[index];
+	WLambda = cuCmulf_by_const_vec4(WLambda, lambda);
       }
 
       Y_temp = operator_vec4(X_temp, U_temp, (nRows * nCols));
@@ -198,8 +198,8 @@ cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, f
       X_tempV1 = (X[index] / (nRows * nCols));
       U_tempV1 = U[index];
 
-      if (nL1Weight > 1)  
-        WLambdaV1 = lambda * L1Weight[index];
+      if (nL1Weight > 1)
+	WLambdaV1 = lambda * L1Weight[index];
 
       Y_tempV1 = X_tempV1 + U_tempV1;
       absxV1 = fabs (Y_tempV1) - WLambdaV1;
@@ -1144,8 +1144,8 @@ cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int fact
       X_temp = reinterpret_cast <float4 *>(X)[index];
 
       if (nL1Weight > 1)
-        WLambda = reinterpret_cast <float4 *>(L1Weight)[index];
-      
+	WLambda = reinterpret_cast <float4 *>(L1Weight)[index];
+
 
       sum +=
 	 (abs(X_temp.x / factor)*WLambda.x + abs(X_temp.y / factor)*WLambda.y) +
@@ -1156,8 +1156,8 @@ cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int fact
     for (int i = Tidy + 4 * Part_Dim; i < Full_Dim; i += stride) {
       index = Tidx + i * nCols;
 
-      if (nL1Weight > 1)  
-        WLambdaV1 = L1Weight[index];
+      if (nL1Weight > 1)
+	WLambdaV1 = L1Weight[index];
 
       sum += (WLambdaV1 * abs(X[index] / factor));
     }
@@ -1186,7 +1186,7 @@ cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
   float WLambda, sum = 0.0;
   float4 X_temp;
 
- 
+
 
   if ((Tidx < nCols) & (Tidy < Part_nRows)) {
 
@@ -1195,7 +1195,7 @@ cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
 
       X_temp = reinterpret_cast <float4 *>(X)[index];
       WLambda = L1Weight[k];
-      
+
       sum +=
 	 (abs(X_temp.x / factor) + abs(X_temp.y / factor)) +
 	 (abs(X_temp.z / factor) + abs(X_temp.w / factor));
@@ -1233,7 +1233,7 @@ cuda_L1_Term_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
 
       X_temp = abs(X[index])/ factor;
       WLambda = L1Weight[k];
-      
+
       sum += (WLambda*X_temp);
 
     }
