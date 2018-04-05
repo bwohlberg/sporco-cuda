@@ -491,7 +491,7 @@ cuda_wrapper_CBPDN (float *D, float *S, float lambda, void *vopt, float *Y)
       float Jfn = Jdf + lambda * Jl1;
 
       // Display iteration details
-      printf ("%4d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n", i, Jfn, Jdf,
+      printf ("%4d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n", i-1, Jfn, Jdf,
 	 Jl1, r, s, rho);
 
     }
