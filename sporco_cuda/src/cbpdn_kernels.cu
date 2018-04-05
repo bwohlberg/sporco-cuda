@@ -807,13 +807,14 @@ cuda_Cal_residuals_norms_vec4(float *s, float *r, float *nX, float *nY,
       X_temp.x = X[index] / (nRows * nCols);
       Y_temp.x = Y[index];
       U_temp.x = U[index];
+      Yprv_temp.x = Yprv[index];
 
       sumX += (X_temp.x * X_temp.x);
       sumY += (Y_temp.x * Y_temp.x);
-      sumX += (X_temp.x * X_temp.x);
+      sumU += (U_temp.x * U_temp.x);
 
       X_temp.x = X_temp.x - Y_temp.x;
-      Y_temp.x = Yprv[index] - Y_temp.x;
+      Y_temp.x = Yprv_temp.x - Y_temp.x;
 
       sumXY += (X_temp.x * X_temp.x);
       sumYY += (rho * Y_temp.x * Y_temp.x);

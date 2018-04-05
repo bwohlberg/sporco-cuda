@@ -225,8 +225,7 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   checkCudaErrors(cudaMalloc((void **) &d_auxf, SIZE_Xf * sizeof (float2)));
   checkCudaErrors(cudaMalloc((void **) &d_GfW, SIZE_Sf * sizeof (float)));
 
-  checkCudaErrors(cudaMalloc((void **) &d_L1Weight,
-	nL1Weight * sizeof (float)));
+  checkCudaErrors(cudaMalloc((void **) &d_L1Weight, nL1Weight * sizeof (float)));
 
   /******************************************/
   /****   Define Block and Thread Size   ****/
@@ -444,6 +443,9 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
     d_ss[0] = 0.0;
     d_r[0] = 0.0;
 
+   if (opt->StdResiduals != 1) {
+     if(nU == 0.0) nU = 1.0;
+   }
 
     epri = sqrtf (nX) * opt->AbsStopTol + max (nX, nY) * opt->RelStopTol;
     edua = sqrtf (nX) * opt->AbsStopTol + rho * nU * opt->RelStopTol;

@@ -401,6 +401,9 @@ cuda_wrapper_CBPDN (float *D, float *S, float lambda, void *vopt, float *Y)
     d_ss[0] = 0.0;
     d_r[0] = 0.0;
 
+   if (opt->StdResiduals != 1) {
+     if(nU == 0.0) nU = 1.0;
+   }
 
     epri = sqrtf (nX) * opt->AbsStopTol + max (nX, nY) * opt->RelStopTol;
     edua = sqrtf (nX) * opt->AbsStopTol + rho * nU * opt->RelStopTol;
