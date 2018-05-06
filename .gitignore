@@ -11,3 +11,5 @@ sporco_cuda/util.c
 docs/source/_static
 
 sporco_cuda.egg-info
+.cache
+.eggs
