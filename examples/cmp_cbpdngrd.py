@@ -37,7 +37,7 @@ sl, sh = util.tikhonov_filter(img, fltlmbd, npd)
 D = util.convdicts()['G:12x12x72']
 
 
-# Set up ConvBPDN options
+# Set up ConvBPDNGradReg options
 lmbda = 1e-2
 mu = 1e-3
 opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': True, 'MaxMainIter': 20,
@@ -46,7 +46,7 @@ opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': True, 'MaxMainIter': 20,
                     'AutoRho': {'Enabled': False}})
 
 
-# Initialise and run ConvBPDN object
+# Initialise and run ConvBPDNGradReg object
 b = cbpdn.ConvBPDNGradReg(D, sh, lmbda, mu, opt)
 X1 = b.solve()
 print("ConvBPDNGradReg solve time: %.2fs" % b.timer.elapsed('solve'))
