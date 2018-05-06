@@ -3,9 +3,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <cuda.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cuda.h>
 
 /*******************************************/
 /****        def. functions             ****/
@@ -20,9 +20,7 @@ void clear_opts(void *data);
 int check_cuda_req(int device);
 
 #ifdef __cplusplus
-} //end extern "C"
+} // end extern "C"
 #endif
 
 #endif // #ifndef UTILS_H
-
-

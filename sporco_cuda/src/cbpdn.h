@@ -7,10 +7,7 @@
 extern "C" {
 #endif
 
-
-void cuda_wrapper_CBPDN(float *D, float* S, float lambda, void *opt,
-			float *Y);
-
+void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *opt, float *Y);
 
 #ifdef __cplusplus
 } // extern "C"

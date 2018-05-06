@@ -3,71 +3,71 @@
 /************************************************************/
 
 /*
-	  argmin_{x_k} (1/2)||\sum_k d_k * x_k - s||_2^2 +
-			    lambda \sum_k ||x_k||_1 +
-			    (mu/2) \sum_k ||G_r x_k||_2^2 +
-			    (mu/2) \sum_k ||G_c x_k||_2^2
+          argmin_{x_k} (1/2)||\sum_k d_k * x_k - s||_2^2 +
+                            lambda \sum_k ||x_k||_1 +
+                            (mu/2) \sum_k ||G_r x_k||_2^2 +
+                            (mu/2) \sum_k ||G_c x_k||_2^2
 
-	  The solution is computed using an ADMM approach (see
-	  boyd-2010-distributed) with efficient solution of the main
-	  linear systems (see wohlberg-2016-efficient and
-	  wohlberg-2016-convolutional2).
+          The solution is computed using an ADMM approach (see
+          boyd-2010-distributed) with efficient solution of the main
+          linear systems (see wohlberg-2016-efficient and
+          wohlberg-2016-convolutional2).
 
 
   Usage:
-	cuda_wrapper_CBPDN_GR(float *D, float *S, float lambda,
-			      float mu, void *opt, float *Y);
+        cuda_wrapper_CBPDN_GR(float *D, float *S, float lambda,
+                              float mu, void *opt, float *Y);
 
   Input:
-	 D           Dictionary filter set (3D array)
-	 S           Input image
-	 lambda      Regularization parameter (l1)
-	 mu          Regularization parameter (l2 of gradient)
-	 opt         Algorithm parameters structure
-	 Y           Dictionary coefficient map set (3D array)
+         D           Dictionary filter set (3D array)
+         S           Input image
+         lambda      Regularization parameter (l1)
+         mu          Regularization parameter (l2 of gradient)
+         opt         Algorithm parameters structure
+         Y           Dictionary coefficient map set (3D array)
 
 
 
   Options structure fields:
 
      Verbose          Flag determining whether iteration status is displayed.
-		      Fields are iteration number, functional value,
-		      data fidelity term, l1 regularisation term, and
-		      primal and dual residuals (see Sec. 3.3 of
-		      boyd-2010-distributed). The value of rho is also
-		      displayed if options request that it is automatically
-		      adjusted.
+                      Fields are iteration number, functional value,
+                      data fidelity term, l1 regularisation term, and
+                      primal and dual residuals (see Sec. 3.3 of
+                      boyd-2010-distributed). The value of rho is also
+                      displayed if options request that it is automatically
+                      adjusted.
      MaxMainIter      Maximum main iterations
      AbsStopTol       Absolute convergence tolerance (see Sec. 3.3.1 of
-		      boyd-2010-distributed)
+                      boyd-2010-distributed)
      RelStopTol       Relative convergence tolerance (see Sec. 3.3.1 of
-		      boyd-2010-distributed)
+                      boyd-2010-distributed)
      L1Weight         Weighting array for coefficients in l1 norm of X
      GrdWeight        Weighting array for coefficients in l2 norm of
-		      gradient of X
+                      gradient of X
      rho              ADMM penalty parameter
      AutoRho          Flag determining whether rho is automatically updated
-		      (see Sec. 3.4.1 of boyd-2010-distributed)
+                      (see Sec. 3.4.1 of boyd-2010-distributed)
      AutoRhoPeriod    Iteration period on which rho is updated
      RhoRsdlRatio     Primal/dual residual ratio in rho update test
      RhoScaling       Multiplier applied to rho when updated
      AutoRhoScaling   Flag determining whether RhoScaling value is
-		      adaptively determined (see wohlberg-2015-adaptive). If
-		      enabled, RhoScaling specifies a maximum allowed
-		      multiplier instead of a fixed multiplier.
+                      adaptively determined (see wohlberg-2015-adaptive). If
+                      enabled, RhoScaling specifies a maximum allowed
+                      multiplier instead of a fixed multiplier.
      RhoRsdlTarget    Residual ratio targeted by auto rho update policy.
      StdResiduals     Flag determining whether standard residual definitions
-		      (see Sec 3.3 of boyd-2010-distributed) are used instead
-		      of normalised residuals (see wohlberg-2015-adaptive)
+                      (see Sec 3.3 of boyd-2010-distributed) are used instead
+                      of normalised residuals (see wohlberg-2015-adaptive)
      RelaxParam       Relaxation parameter (see Sec. 3.4.3 of
-		      boyd-2010-distributed)
+                      boyd-2010-distributed)
      NonNegCoef       Flag indicating whether solution should be forced to
-		      be non-negative
+                      be non-negative
      NoBndryCross     Flag indicating whether all solution coefficients
-		      corresponding to filters crossing the image boundary
-		      should be forced to zero.
+                      corresponding to filters crossing the image boundary
+                      should be forced to zero.
      AuxVarObj        Flag determining whether objective function is computed
-		      using the auxiliary (split) variable
+                      using the auxiliary (split) variable
      HighMemSolve     Use more memory for a slightly faster solution
 
 
@@ -75,33 +75,30 @@
 */
 
 // stdlib includes
-#include <stdio.h>
-#include <stdlib.h>
 #include <complex.h>
 #include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // CUDA library includes
-#include "cufft.h"	     // perform FFT on the GPU
-#include "cublas_v2.h"	     // perform linear algebra operations on the GPU
+#include "cublas_v2.h" // perform linear algebra operations on the GPU
+#include "cufft.h"     // perform FFT on the GPU
 
 // local includes
+#include "algopt.h" // Contains the parameters structure
 #include "common.h"
 #include "utils.h"
-#include "algopt.h"	     // Contains the parameters structure
-//extern "C" {
+// extern "C" {
 #include "cbpdn_grd.h"
 //}
 #include "cbpdn_kernels.h"
 
-void
-cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
-   void *vopt, float *Y)
-{
-  AlgOpt *opt = ((AlgOpt *) vopt);
+void cuda_wrapper_CBPDN_GR(float *D, float *S, float lambda, float mu,
+                           void *vopt, float *Y) {
+  AlgOpt *opt = ((AlgOpt *)vopt);
 
-// Checks and sets default options
+  // Checks and sets default options
   default_opts(opt);
-
 
   /*************************************/
   /****   Check CUDA requirements   ****/
@@ -109,8 +106,7 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
 
   int k = check_cuda_req(opt->device);
 
-  checkCudaErrors(cudaSetDevice (k));
-
+  checkCudaErrors(cudaSetDevice(k));
 
   /******************************/
   /****   Define Variables   ****/
@@ -171,12 +167,10 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   float epri = 0;
   float edua = 0;
 
-
   if (opt->StdResiduals == 1)
     opt->RhoRsdlTarget = 1;
   else
-    opt->RhoRsdlTarget = 1 + powf(18.3, log10 (lambda) + 1);
-
+    opt->RhoRsdlTarget = 1 + powf(18.3, log10(lambda) + 1);
 
   cublasHandle_t cublas_handle;
   checkCudaErrors(cublasCreate(&cublas_handle));
@@ -186,55 +180,53 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   cufftHandle planfft_reverse_many;
 
   checkCudaErrors(cufftPlanMany(&planfft_forward_many, 2, n, inembed, 1,
-	IMG_COL_SIZE * IMG_ROW_SIZE, onembed, 1, LIMIT_X * IMG_ROW_SIZE,
-	CUFFT_R2C, BATCH));
+                                IMG_COL_SIZE * IMG_ROW_SIZE, onembed, 1,
+                                LIMIT_X * IMG_ROW_SIZE, CUFFT_R2C, BATCH));
 
   checkCudaErrors(cufftPlanMany(&planfft_forward_many_Sf, 2, n, inembed, 1,
-	IMG_COL_SIZE * IMG_ROW_SIZE, onembed, 1, LIMIT_X * IMG_ROW_SIZE,
-	CUFFT_R2C, 1));
+                                IMG_COL_SIZE * IMG_ROW_SIZE, onembed, 1,
+                                LIMIT_X * IMG_ROW_SIZE, CUFFT_R2C, 1));
 
-  checkCudaErrors(cufftPlanMany(&planfft_reverse_many, 2, n, NULL, 1, 0,
-				NULL, 1, 0, CUFFT_C2R, BATCH));
-
+  checkCudaErrors(cufftPlanMany(&planfft_reverse_many, 2, n, NULL, 1, 0, NULL,
+                                1, 0, CUFFT_C2R, BATCH));
 
   /***************************/
   /****   Allocate data   ****/
   /***************************/
 
   // Unified Memory (necessary variables)
-  checkCudaErrors(cudaMallocManaged(&d_Y, ((int) SIZE_X * sizeof (float))));
-  checkCudaErrors(cudaMalloc((void **) &d_S, SIZE_S * sizeof (float)));
-  checkCudaErrors(cudaMalloc((void **) &d_D, SIZE_D * sizeof (float)));
+  checkCudaErrors(cudaMallocManaged(&d_Y, ((int)SIZE_X * sizeof(float))));
+  checkCudaErrors(cudaMalloc((void **)&d_S, SIZE_S * sizeof(float)));
+  checkCudaErrors(cudaMalloc((void **)&d_D, SIZE_D * sizeof(float)));
 
-  checkCudaErrors(cudaMallocManaged(&d_r, ((int) 1 * sizeof (float))));
-  checkCudaErrors(cudaMallocManaged(&d_ss, ((int) 1 * sizeof (float))));
-  checkCudaErrors(cudaMallocManaged(&d_nX, ((int) 1 * sizeof (float))));
-  checkCudaErrors(cudaMallocManaged(&d_nY, ((int) 1 * sizeof (float))));
-  checkCudaErrors(cudaMallocManaged(&d_nU, ((int) 1 * sizeof (float))));
+  checkCudaErrors(cudaMallocManaged(&d_r, ((int)1 * sizeof(float))));
+  checkCudaErrors(cudaMallocManaged(&d_ss, ((int)1 * sizeof(float))));
+  checkCudaErrors(cudaMallocManaged(&d_nX, ((int)1 * sizeof(float))));
+  checkCudaErrors(cudaMallocManaged(&d_nY, ((int)1 * sizeof(float))));
+  checkCudaErrors(cudaMallocManaged(&d_nU, ((int)1 * sizeof(float))));
 
-  checkCudaErrors(cudaMallocManaged(&d_GrdWeight,
-	((int) opt->WEIGHT_SIZE * sizeof (float))));
+  checkCudaErrors(
+      cudaMallocManaged(&d_GrdWeight, ((int)opt->WEIGHT_SIZE * sizeof(float))));
 
   // Global Memory (necessary variables)
-  checkCudaErrors(cudaMalloc((void **) &d_X, SIZE_X * sizeof (float)));
-  checkCudaErrors(cudaMalloc((void **) &d_U, SIZE_X * sizeof (float)));
-  checkCudaErrors(cudaMalloc((void **) &d_Yprv, SIZE_X * sizeof (float)));
+  checkCudaErrors(cudaMalloc((void **)&d_X, SIZE_X * sizeof(float)));
+  checkCudaErrors(cudaMalloc((void **)&d_U, SIZE_X * sizeof(float)));
+  checkCudaErrors(cudaMalloc((void **)&d_Yprv, SIZE_X * sizeof(float)));
 
-  checkCudaErrors(cudaMalloc((void **) &d_C, SIZE_Xf * sizeof (float2)));
-  checkCudaErrors(cudaMalloc((void **) &d_Df, SIZE_Xf * sizeof (float2)));
-  checkCudaErrors(cudaMalloc((void **) &d_Dsf, SIZE_Xf * sizeof (float2)));
+  checkCudaErrors(cudaMalloc((void **)&d_C, SIZE_Xf * sizeof(float2)));
+  checkCudaErrors(cudaMalloc((void **)&d_Df, SIZE_Xf * sizeof(float2)));
+  checkCudaErrors(cudaMalloc((void **)&d_Dsf, SIZE_Xf * sizeof(float2)));
 
   // Global Memory (auxiliary variables)
-  checkCudaErrors(cudaMalloc((void **) &d_Sf, SIZE_Sf * sizeof (float2)));
-  checkCudaErrors(cudaMalloc((void **) &d_aux, SIZE_X * sizeof (float)));
-  checkCudaErrors(cudaMalloc((void **) &d_auxf, SIZE_Xf * sizeof (float2)));
-  checkCudaErrors(cudaMalloc((void **) &d_GfW, SIZE_Sf * sizeof (float)));
+  checkCudaErrors(cudaMalloc((void **)&d_Sf, SIZE_Sf * sizeof(float2)));
+  checkCudaErrors(cudaMalloc((void **)&d_aux, SIZE_X * sizeof(float)));
+  checkCudaErrors(cudaMalloc((void **)&d_auxf, SIZE_Xf * sizeof(float2)));
+  checkCudaErrors(cudaMalloc((void **)&d_GfW, SIZE_Sf * sizeof(float)));
 
-  checkCudaErrors(cudaMalloc((void **) &d_L1Weight,
-			     nL1Weight * sizeof (float)));
+  checkCudaErrors(cudaMalloc((void **)&d_L1Weight, nL1Weight * sizeof(float)));
 
   if (nWeight > 1) {
-    checkCudaErrors(cudaMalloc ((void **) &d_Weight, nWeight * sizeof (int)));
+    checkCudaErrors(cudaMalloc((void **)&d_Weight, nWeight * sizeof(int)));
   }
 
   /******************************************/
@@ -253,7 +245,6 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   blocksPerGrid_vec4.y = ((IMG_ROW_SIZE / 4 - 1) / threadsPerBlock.y) + 1;
   blocksPerGrid_vec4.z = 1;
 
-
   blocksPerGrid_fft.x = ((LIMIT_X - 1) / threadsPerBlock.x) + 1;
   blocksPerGrid_fft.y = ((IMG_ROW_SIZE - 1) / threadsPerBlock.y) + 1;
   blocksPerGrid_fft.z = 1;
@@ -262,30 +253,28 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   blocksPerGrid_radix2_fft.y = ((IMG_ROW_SIZE / 2 - 1) / threadsPerBlock.y) + 1;
   blocksPerGrid_radix2_fft.z = 1;
 
-
   blocksPerGrid_Padding.x = ((DICT_COL_SIZE - 1) / threadsPerBlock.x) + 1;
   blocksPerGrid_Padding.y = ((DICT_ROW_SIZE - 1) / threadsPerBlock.y) + 1;
   blocksPerGrid_Padding.z = 1;
-
 
   /***********************************************/
   /****   Transfer data from host to device   ****/
   /***********************************************/
 
-  checkCudaErrors(cudaMemcpy(d_S, S, SIZE_S * sizeof (float),
-			     cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(d_D, D, SIZE_D * sizeof (float),
-			     cudaMemcpyHostToDevice));
+  checkCudaErrors(
+      cudaMemcpy(d_S, S, SIZE_S * sizeof(float), cudaMemcpyHostToDevice));
+  checkCudaErrors(
+      cudaMemcpy(d_D, D, SIZE_D * sizeof(float), cudaMemcpyHostToDevice));
   checkCudaErrors(cudaMemcpy(d_GrdWeight, opt->GrdWeight,
-			     opt->WEIGHT_SIZE * sizeof (float),
-			     cudaMemcpyHostToDevice));
+                             opt->WEIGHT_SIZE * sizeof(float),
+                             cudaMemcpyHostToDevice));
   checkCudaErrors(cudaMemcpy(d_L1Weight, opt->L1Weight,
-			     nL1Weight * sizeof (float),
-			     cudaMemcpyHostToDevice));
+                             nL1Weight * sizeof(float),
+                             cudaMemcpyHostToDevice));
 
   if (nWeight > 1) {
-    checkCudaErrors(cudaMemcpy(d_Weight, opt->Weight, nWeight * sizeof (int),
-		    cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_Weight, opt->Weight, nWeight * sizeof(int),
+                               cudaMemcpyHostToDevice));
   }
 
   /****************************************/
@@ -295,12 +284,12 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   // Share the same memory space in order to reduce expense
   d_Xr = d_aux;
 
-  checkCudaErrors(cudaMemset(d_aux, 0, SIZE_X * sizeof (float)));
-  checkCudaErrors(cudaMemset(d_Yprv, 0, SIZE_X * sizeof (float)));
-  checkCudaErrors(cudaMemset(d_Y, 0,
-	IMG_ROW_SIZE * IMG_COL_SIZE * sizeof (float)));
+  checkCudaErrors(cudaMemset(d_aux, 0, SIZE_X * sizeof(float)));
+  checkCudaErrors(cudaMemset(d_Yprv, 0, SIZE_X * sizeof(float)));
+  checkCudaErrors(
+      cudaMemset(d_Y, 0, IMG_ROW_SIZE * IMG_COL_SIZE * sizeof(float)));
 
-  checkCudaErrors(cudaDeviceSynchronize ());
+  checkCudaErrors(cudaDeviceSynchronize());
 
   // Compute filters in DFT domain
   // Since d_Sf and d_Df are going to be calculated then, we use these
@@ -309,45 +298,42 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
 
   d_Y[0] = -1;
   d_Y[1] = 1;
-  checkCudaErrors(cufftExecR2C(planfft_forward_many_Sf, ((cufftReal *) d_Y),
-			       ((cufftComplex *) d_Sf)));
+  checkCudaErrors(cufftExecR2C(planfft_forward_many_Sf, ((cufftReal *)d_Y),
+                               ((cufftComplex *)d_Sf)));
 
-  checkCudaErrors(cudaDeviceSynchronize ());
+  checkCudaErrors(cudaDeviceSynchronize());
 
   d_Y[0] = -1;
   d_Y[1] = 0;
   d_Y[IMG_COL_SIZE] = 1;
-  checkCudaErrors(cufftExecR2C(planfft_forward_many_Sf, ((cufftReal *) d_Y),
-			       ((cufftComplex *) d_Df)));
+  checkCudaErrors(cufftExecR2C(planfft_forward_many_Sf, ((cufftReal *)d_Y),
+                               ((cufftComplex *)d_Df)));
 
-  cuda_Cal_Gfw <<< blocksPerGrid_fft, threadsPerBlock >>>
-	       (d_GfW, d_Sf, d_Df, IMG_ROW_SIZE, LIMIT_X);
-
+  cuda_Cal_Gfw<<<blocksPerGrid_fft, threadsPerBlock>>>(d_GfW, d_Sf, d_Df,
+                                                       IMG_ROW_SIZE, LIMIT_X);
 
   // Sets padded dictionary
-  cuda_Pad_Dict <<< blocksPerGrid_Padding, threadsPerBlock >>>
-		(d_aux, d_D, DICT_ROW_SIZE, DICT_COL_SIZE, DICT_M_SIZE,
-		 IMG_ROW_SIZE, IMG_COL_SIZE);
-
+  cuda_Pad_Dict<<<blocksPerGrid_Padding, threadsPerBlock>>>(
+      d_aux, d_D, DICT_ROW_SIZE, DICT_COL_SIZE, DICT_M_SIZE, IMG_ROW_SIZE,
+      IMG_COL_SIZE);
 
   // Calculates "Sf'" = FFT2(S)
-  checkCudaErrors(cufftExecR2C(planfft_forward_many_Sf, ((cufftReal *) d_S),
-			       ((cufftComplex *) d_Sf)));
-
+  checkCudaErrors(cufftExecR2C(planfft_forward_many_Sf, ((cufftReal *)d_S),
+                               ((cufftComplex *)d_Sf)));
 
   // Calculates '"Df" = FFT2(D_padded)
-  checkCudaErrors(cufftExecR2C (planfft_forward_many, ((cufftReal *) d_aux),
-	((cufftComplex *) d_Df)));
+  checkCudaErrors(cufftExecR2C(planfft_forward_many, ((cufftReal *)d_aux),
+                               ((cufftComplex *)d_Df)));
 
   if (IMG_ROW_SIZE % 2) {
     // Calculates "Dsf" and "C" (both in a Kernel)
-    cuda_Cal_Dsf_grd_C <<< blocksPerGrid_fft, threadsPerBlock >>>
-	  (d_Dsf, d_C, d_Sf, d_Df, d_GfW, d_GrdWeight, rho, mu,
-	   IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE); // comp
+    cuda_Cal_Dsf_grd_C<<<blocksPerGrid_fft, threadsPerBlock>>>(
+        d_Dsf, d_C, d_Sf, d_Df, d_GfW, d_GrdWeight, rho, mu, IMG_ROW_SIZE,
+        LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE); // comp
   } else {
-    cuda_Cal_Dsf_grd_C_vec4 <<< blocksPerGrid_radix2_fft, threadsPerBlock >>> (
-	  d_Dsf, d_C, d_Sf, d_Df, d_GfW, d_GrdWeight, rho, mu,
-	  IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE); // comp
+    cuda_Cal_Dsf_grd_C_vec4<<<blocksPerGrid_radix2_fft, threadsPerBlock>>>(
+        d_Dsf, d_C, d_Sf, d_Df, d_GfW, d_GrdWeight, rho, mu, IMG_ROW_SIZE,
+        LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE); // comp
   }
 
   checkCudaErrors(cudaDeviceSynchronize());
@@ -358,12 +344,10 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   d_ss[0] = 0.0;
   d_r[0] = 0.0;
 
-
   const char *header = "Itn   Fnc       DFid      Regℓ1     Regℓ2∇     "
-     "r         s         ρ";
+                       "r         s         ρ";
   const char *sepstr = "----------------------------------------------"
-     "----------------------------";
-
+                       "----------------------------";
 
   /*******************************/
   /****   Main Loop (CBPDN)   ****/
@@ -372,106 +356,94 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   int i = 1;
   while (i <= MAX_ITER && (r > epri || s > edua)) {
 
-
     if (i == 1) {
       // Defines U and FFT(Y-U) initial values as zero arrays
-      checkCudaErrors(cudaMemset(d_auxf, 0, SIZE_Xf * sizeof (float2)));
-      checkCudaErrors(cudaMemset(d_U, 0, SIZE_X * sizeof (float)));
-      checkCudaErrors(cudaMemset(d_Y, 0, SIZE_X * sizeof (float)));
+      checkCudaErrors(cudaMemset(d_auxf, 0, SIZE_Xf * sizeof(float2)));
+      checkCudaErrors(cudaMemset(d_U, 0, SIZE_X * sizeof(float)));
+      checkCudaErrors(cudaMemset(d_Y, 0, SIZE_X * sizeof(float)));
     } else {
       // Calculates Y-U
-      cuda_CalYU_vec4 <<< blocksPerGrid, threadsPerBlock >>>
-	    (d_aux, d_Y, d_U, IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE);
+      cuda_CalYU_vec4<<<blocksPerGrid, threadsPerBlock>>>(
+          d_aux, d_Y, d_U, IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE);
 
       // Calculates FFT2(Y-U)
-      checkCudaErrors(cufftExecR2C(planfft_forward_many,
-	    ((cufftReal *) d_aux), ((cufftComplex *) d_auxf)));
+      checkCudaErrors(cufftExecR2C(planfft_forward_many, ((cufftReal *)d_aux),
+                                   ((cufftComplex *)d_auxf)));
     }
 
     // Calculates Xf
     if (IMG_ROW_SIZE % 2) {
-      cuda_solvedbd_sm <<< blocksPerGrid_fft, threadsPerBlock >>>
-	    (d_auxf, d_Df, d_Dsf, d_GfW, d_GrdWeight, rho, mu, d_auxf, d_C,
-	     IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
-    }				// completar
-    else {
-      cuda_solvedbd_sm_vec4 <<< blocksPerGrid_radix2_fft, threadsPerBlock >>>
-	    (d_auxf, d_Df, d_Dsf, d_GfW, d_GrdWeight, rho, mu, d_auxf, d_C,
-	     IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
-    }				// completar
-
+      cuda_solvedbd_sm<<<blocksPerGrid_fft, threadsPerBlock>>>(
+          d_auxf, d_Df, d_Dsf, d_GfW, d_GrdWeight, rho, mu, d_auxf, d_C,
+          IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
+    } else {
+      cuda_solvedbd_sm_vec4<<<blocksPerGrid_radix2_fft, threadsPerBlock>>>(
+          d_auxf, d_Df, d_Dsf, d_GfW, d_GrdWeight, rho, mu, d_auxf, d_C,
+          IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
+    }
 
     // Calculates  X = IFFT(Xf)
-    checkCudaErrors(cufftExecC2R(planfft_reverse_many,
-	  ((cufftComplex *) d_auxf), ((cufftReal *) d_X)));
-
+    checkCudaErrors(cufftExecC2R(planfft_reverse_many, ((cufftComplex *)d_auxf),
+                                 ((cufftReal *)d_X)));
 
     // Calculates Xr (over-relaxation of X) see pg. 21 of boyd-2010-distributed
     if (opt->RelaxParam != 1.0) {
-      cuda_OverRelax_vec4 <<< blocksPerGrid, threadsPerBlock >>>
-	    (d_Xr, d_X, d_Y, opt->RelaxParam, IMG_ROW_SIZE,
-	     IMG_COL_SIZE, DICT_M_SIZE);
+      cuda_OverRelax_vec4<<<blocksPerGrid, threadsPerBlock>>>(
+          d_Xr, d_X, d_Y, opt->RelaxParam, IMG_ROW_SIZE, IMG_COL_SIZE,
+          DICT_M_SIZE);
     } else {
       d_Xr = d_X;
     }
 
-
     // Calculates Y = shinkage(X + U, L1Weight*lamdba/rho) and U = U + X - Y
     // (both steps in a single kernel in order to reduce access memory expenses)
 
-    offset_W = IMG_ROW_SIZE*IMG_COL_SIZE*W_flag;
+    offset_W = IMG_ROW_SIZE * IMG_COL_SIZE * W_flag;
 
-    if (nL1Weight == DICT_M_SIZE){
-       if ((IMG_ROW_SIZE % 4) == 0){
-	   cuda_Shrink_CalU_vec4_Vector<<< blocksPerGrid_vec4,
-	     threadsPerBlock >>> (&d_Y[offset_W], &d_U[offset_W],
-			    &d_Xr[offset_W], lambda/rho, &d_L1Weight[W_flag],
-			    IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE-W_flag);}
-	else{
-	   cuda_Shrink_CalU_Vector <<< blocksPerGrid, threadsPerBlock >>>
-		 (&d_Y[offset_W], &d_U[offset_W],
-		  &d_Xr[offset_W], lambda/rho, &d_L1Weight[W_flag],
-		  IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE-W_flag);}
-    }
-    else if (nL1Weight == 1) {
-	cuda_Shrink_CalU_vec4_Scalar <<< blocksPerGrid,
-	  threadsPerBlock >>> (&d_Y[offset_W], &d_U[offset_W],
-			   &d_Xr[offset_W], lambda/rho, d_L1Weight,
-			   IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE - W_flag);
-    }
-    else {
-	cuda_Shrink_CalU_vec4_Array<<< blocksPerGrid,
-	  threadsPerBlock >>> (&d_Y[offset_W], &d_U[offset_W],
-			  &d_Xr[offset_W], lambda/rho, &d_L1Weight[offset_W],
-			  IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE - W_flag);
+    if (nL1Weight == DICT_M_SIZE) {
+      if ((IMG_ROW_SIZE % 4) == 0) {
+        cuda_Shrink_CalU_vec4_Vector<<<blocksPerGrid_vec4, threadsPerBlock>>>(
+            &d_Y[offset_W], &d_U[offset_W], &d_Xr[offset_W], lambda / rho,
+            &d_L1Weight[W_flag], IMG_ROW_SIZE, IMG_COL_SIZE,
+            DICT_M_SIZE - W_flag);
+      } else {
+        cuda_Shrink_CalU_Vector<<<blocksPerGrid, threadsPerBlock>>>(
+            &d_Y[offset_W], &d_U[offset_W], &d_Xr[offset_W], lambda / rho,
+            &d_L1Weight[W_flag], IMG_ROW_SIZE, IMG_COL_SIZE,
+            DICT_M_SIZE - W_flag);
+      }
+    } else if (nL1Weight == 1) {
+      cuda_Shrink_CalU_vec4_Scalar<<<blocksPerGrid, threadsPerBlock>>>(
+          &d_Y[offset_W], &d_U[offset_W], &d_Xr[offset_W], lambda / rho,
+          d_L1Weight, IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE - W_flag);
+    } else {
+      cuda_Shrink_CalU_vec4_Array<<<blocksPerGrid, threadsPerBlock>>>(
+          &d_Y[offset_W], &d_U[offset_W], &d_Xr[offset_W], lambda / rho,
+          &d_L1Weight[offset_W], IMG_ROW_SIZE, IMG_COL_SIZE,
+          DICT_M_SIZE - W_flag);
     }
 
-
-
-    if (W_flag == 1)
-    {
-      cuda_Cal_X_minus_U_W<<< blocksPerGrid,
-	     threadsPerBlock >>> (d_Y, d_U, d_Xr, d_Weight,
-				  IMG_ROW_SIZE, IMG_COL_SIZE);
+    if (W_flag == 1) {
+      cuda_Cal_X_minus_U_W<<<blocksPerGrid, threadsPerBlock>>>(
+          d_Y, d_U, d_Xr, d_Weight, IMG_ROW_SIZE, IMG_COL_SIZE);
     }
-
 
     // compute distances between X and Y,  Y and Yprv
     // See pp. 19-20 of boyd-2010-distributed
-    cuda_Cal_residuals_norms_vec4 <<< blocksPerGrid, threadsPerBlock >>>
-	  (d_ss, d_r, d_nX, d_nY, d_nU, d_X, d_Y, d_U, d_Yprv, rho,
-	   IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE);
+    cuda_Cal_residuals_norms_vec4<<<blocksPerGrid, threadsPerBlock>>>(
+        d_ss, d_r, d_nX, d_nY, d_nU, d_X, d_Y, d_U, d_Yprv, rho, IMG_ROW_SIZE,
+        IMG_COL_SIZE, DICT_M_SIZE);
 
     checkCudaErrors(cudaDeviceSynchronize());
 
     // nX, nY, nU, r, s are divided by 1e+6 since kernels use atomic
     // functions (big calculation error if the reduction values are small)
-    nX = sqrtf (d_nX[0] / 1e+6);
-    nY = sqrtf (d_nY[0] / 1e+6);
-    nU = sqrtf (d_nU[0] / 1e+6);
+    nX = sqrtf(d_nX[0] / 1e+6);
+    nY = sqrtf(d_nY[0] / 1e+6);
+    nU = sqrtf(d_nU[0] / 1e+6);
 
-    r = sqrtf (d_r[0] / 1e+6);
-    s = sqrtf (d_ss[0] / 1e+6);
+    r = sqrtf(d_r[0] / 1e+6);
+    s = sqrtf(d_ss[0] / 1e+6);
 
     d_nX[0] = 0.0;
     d_nY[0] = 0.0;
@@ -479,30 +451,30 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
     d_ss[0] = 0.0;
     d_r[0] = 0.0;
 
-   if (opt->StdResiduals != 1) {
-     if(nU == 0.0) nU = 1.0;
-   }
+    if (opt->StdResiduals != 1) {
+      if (nU == 0.0)
+        nU = 1.0;
+    }
 
-    epri = sqrtf (nX) * opt->AbsStopTol + max (nX, nY) * opt->RelStopTol;
-    edua = sqrtf (nX) * opt->AbsStopTol + rho * nU * opt->RelStopTol;
-
+    epri = sqrtf(nX) * opt->AbsStopTol + max(nX, nY) * opt->RelStopTol;
+    edua = sqrtf(nX) * opt->AbsStopTol + rho * nU * opt->RelStopTol;
 
     if (opt->StdResiduals != 1) {
       // See wohlberg-2015-adaptive
-      r /= max (nX, nY);
+      r /= max(nX, nY);
       s /= (rho * nU);
-      epri /= max (nX, nY);
+      epri /= max(nX, nY);
       edua /= (rho * nU);
     }
 
     if (opt->Verbose == 1) {
 
       if (i == 1) {
-	printf ("%s\n%s\n", header, sepstr);
+        printf("%s\n%s\n", header, sepstr);
 
-	checkCudaErrors(cudaMallocManaged(&d_JL1, ((int) sizeof (float))));
-	checkCudaErrors(cudaMallocManaged(&d_Jdf, ((int) sizeof (float))));
-	checkCudaErrors(cudaMallocManaged(&d_Jgr, ((int) sizeof (float))));
+        checkCudaErrors(cudaMallocManaged(&d_JL1, ((int)sizeof(float))));
+        checkCudaErrors(cudaMallocManaged(&d_Jdf, ((int)sizeof(float))));
+        checkCudaErrors(cudaMallocManaged(&d_Jgr, ((int)sizeof(float))));
       }
 
       d_JL1[0] = 0.0;
@@ -511,64 +483,65 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
 
       // Compute data fidelity term in Fourier domain (note normalisation)
       if (opt->AuxVarObj == 1) {
-	  // Calculates FFT2(Y)
-	  checkCudaErrors(cufftExecR2C(planfft_forward_many,
-		((cufftReal *) d_Y), ((cufftComplex *) d_auxf)));
+        // Calculates FFT2(Y)
+        checkCudaErrors(cufftExecR2C(planfft_forward_many, ((cufftReal *)d_Y),
+                                     ((cufftComplex *)d_auxf)));
 
-	  if (IMG_ROW_SIZE % 2)
-	    cuda_Fidelity_Gr_Term <<< blocksPerGrid_fft, threadsPerBlock >>>
-		  (d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW, d_GrdWeight,
-		   IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
-	  else
-	     cuda_Fidelity_Gr_Term_vec4 <<< blocksPerGrid_radix2_fft,
-	       threadsPerBlock >>> (d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW,
-		   d_GrdWeight, IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
+        if (IMG_ROW_SIZE % 2)
+          cuda_Fidelity_Gr_Term<<<blocksPerGrid_fft, threadsPerBlock>>>(
+              d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW, d_GrdWeight,
+              IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
+        else
+          cuda_Fidelity_Gr_Term_vec4<<<blocksPerGrid_radix2_fft,
+                                       threadsPerBlock>>>(
+              d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW, d_GrdWeight,
+              IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
 
-	  if (nL1Weight == DICT_M_SIZE){
-	    if ((IMG_ROW_SIZE % 4) == 0) {
-	       cuda_L1_Term_vec4_Vector<<< blocksPerGrid_vec4,
-		 threadsPerBlock >>> (d_JL1, d_Y, d_L1Weight, 1, IMG_ROW_SIZE,
-		    IMG_COL_SIZE, DICT_M_SIZE); }
-	    else {
-	       cuda_L1_Term_Vector <<< blocksPerGrid, threadsPerBlock >>>
-		     (d_JL1, d_Y, d_L1Weight, 1, IMG_ROW_SIZE,
-		      IMG_COL_SIZE, DICT_M_SIZE); }}
-	  else {
-	     cuda_L1_Term_vec4_Scalar_Array <<< blocksPerGrid,
-	       threadsPerBlock >>> (d_JL1, d_Y, d_L1Weight, 1, IMG_ROW_SIZE,
-	       IMG_COL_SIZE, DICT_M_SIZE, nL1Weight);}
+        if (nL1Weight == DICT_M_SIZE) {
+          if ((IMG_ROW_SIZE % 4) == 0) {
+            cuda_L1_Term_vec4_Vector<<<blocksPerGrid_vec4, threadsPerBlock>>>(
+                d_JL1, d_Y, d_L1Weight, 1, IMG_ROW_SIZE, IMG_COL_SIZE,
+                DICT_M_SIZE);
+          } else {
+            cuda_L1_Term_Vector<<<blocksPerGrid, threadsPerBlock>>>(
+                d_JL1, d_Y, d_L1Weight, 1, IMG_ROW_SIZE, IMG_COL_SIZE,
+                DICT_M_SIZE);
+          }
+        } else {
+          cuda_L1_Term_vec4_Scalar_Array<<<blocksPerGrid, threadsPerBlock>>>(
+              d_JL1, d_Y, d_L1Weight, 1, IMG_ROW_SIZE, IMG_COL_SIZE,
+              DICT_M_SIZE, nL1Weight);
+        }
 
-	}
-	else {
-	  if (IMG_ROW_SIZE % 2)
-	    cuda_Fidelity_Gr_Term <<< blocksPerGrid_fft, threadsPerBlock >>>
-		  (d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW, d_GrdWeight,
-		   IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
-	  else
-	    cuda_Fidelity_Gr_Term_vec4 <<< blocksPerGrid_radix2_fft,
-	      threadsPerBlock >>> (d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW,
-		 d_GrdWeight, IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
+      } else {
+        if (IMG_ROW_SIZE % 2)
+          cuda_Fidelity_Gr_Term<<<blocksPerGrid_fft, threadsPerBlock>>>(
+              d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW, d_GrdWeight,
+              IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
+        else
+          cuda_Fidelity_Gr_Term_vec4<<<blocksPerGrid_radix2_fft,
+                                       threadsPerBlock>>>(
+              d_Jdf, d_Jgr, d_Df, d_auxf, d_Sf, d_GfW, d_GrdWeight,
+              IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);
 
-
-	  if (nL1Weight == DICT_M_SIZE){
-	    if ((IMG_ROW_SIZE % 4) == 0) {
-	       cuda_L1_Term_vec4_Vector<<< blocksPerGrid_vec4,
-		 threadsPerBlock >>> (d_JL1, d_X, d_L1Weight,
-		    (IMG_ROW_SIZE * IMG_COL_SIZE), IMG_ROW_SIZE,
-		     IMG_COL_SIZE, DICT_M_SIZE); }
-	    else  {
-	       cuda_L1_Term_Vector <<< blocksPerGrid, threadsPerBlock >>>
-		     (d_JL1, d_X, d_L1Weight, (IMG_ROW_SIZE * IMG_COL_SIZE),
-		      IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE); }}
-	  else{
-	    cuda_L1_Term_vec4_Scalar_Array <<< blocksPerGrid,
-	      threadsPerBlock >>> (d_JL1, d_X, d_L1Weight,
-		 (IMG_ROW_SIZE * IMG_COL_SIZE), IMG_ROW_SIZE,
-		  IMG_COL_SIZE, DICT_M_SIZE, nL1Weight); }
-
+        if (nL1Weight == DICT_M_SIZE) {
+          if ((IMG_ROW_SIZE % 4) == 0) {
+            cuda_L1_Term_vec4_Vector<<<blocksPerGrid_vec4, threadsPerBlock>>>(
+                d_JL1, d_X, d_L1Weight, (IMG_ROW_SIZE * IMG_COL_SIZE),
+                IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE);
+          } else {
+            cuda_L1_Term_Vector<<<blocksPerGrid, threadsPerBlock>>>(
+                d_JL1, d_X, d_L1Weight, (IMG_ROW_SIZE * IMG_COL_SIZE),
+                IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE);
+          }
+        } else {
+          cuda_L1_Term_vec4_Scalar_Array<<<blocksPerGrid, threadsPerBlock>>>(
+              d_JL1, d_X, d_L1Weight, (IMG_ROW_SIZE * IMG_COL_SIZE),
+              IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE, nL1Weight);
+        }
       }
 
-      checkCudaErrors(cudaDeviceSynchronize ());
+      checkCudaErrors(cudaDeviceSynchronize());
 
       float Jdf = d_Jdf[0] / (IMG_ROW_SIZE * IMG_COL_SIZE);
       float Jgr = d_Jgr[0] / (IMG_ROW_SIZE * IMG_COL_SIZE);
@@ -576,75 +549,69 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
       float Jfn = Jdf + lambda * Jl1 + mu * Jgr;
 
       // Display iteration details
-      printf ("%4d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n", i-1, Jfn, Jdf,
-	 Jl1, Jgr, r, s, rho);
-
+      printf("%4d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n", i - 1, Jfn, Jdf,
+             Jl1, Jgr, r, s, rho);
     }
-
 
     // See wohlberg-2015-adaptive and pp. 20-21 of boyd-2010-distributed
 
     if ((opt->AutoRho == 1) && (i > 1) && (i % opt->AutoRhoPeriod == 0)) {
 
       if (opt->AutoRhoScaling == 1) {
-	rhomlt = sqrtf (r / (s * opt->RhoRsdlTarget));
+        rhomlt = sqrtf(r / (s * opt->RhoRsdlTarget));
 
-	if (rhomlt < 1)
-	  rhomlt = 1 / rhomlt;
-	if (rhomlt > opt->RhoScaling)
-	  rhomlt = opt->RhoScaling;
+        if (rhomlt < 1)
+          rhomlt = 1 / rhomlt;
+        if (rhomlt > opt->RhoScaling)
+          rhomlt = opt->RhoScaling;
       } else {
-	rhomlt = opt->RhoScaling;
+        rhomlt = opt->RhoScaling;
       }
 
       rsf = 1;
 
       if (r > opt->RhoRsdlTarget * opt->RhoRsdlRatio * s)
-	rsf = rhomlt;
+        rsf = rhomlt;
       if (s > (opt->RhoRsdlRatio / opt->RhoRsdlTarget) * r)
-	rsf = 1 / rhomlt;
+        rsf = 1 / rhomlt;
 
       rho = rsf * rho;
 
       // U = U / rsf
       float zero = 0;
       float rsf_inv = 1 / rsf;
-      checkCudaErrors(cublasSgeam(cublas_handle, CUBLAS_OP_N, CUBLAS_OP_N,
-	    (IMG_ROW_SIZE * DICT_M_SIZE), IMG_ROW_SIZE, &rsf_inv,
-	     d_U, (IMG_ROW_SIZE * DICT_M_SIZE), &zero, d_U,
-	     (IMG_ROW_SIZE * DICT_M_SIZE), d_U, (IMG_ROW_SIZE * DICT_M_SIZE)));
+      checkCudaErrors(cublasSgeam(
+          cublas_handle, CUBLAS_OP_N, CUBLAS_OP_N, (IMG_ROW_SIZE * DICT_M_SIZE),
+          IMG_ROW_SIZE, &rsf_inv, d_U, (IMG_ROW_SIZE * DICT_M_SIZE), &zero, d_U,
+          (IMG_ROW_SIZE * DICT_M_SIZE), d_U, (IMG_ROW_SIZE * DICT_M_SIZE)));
 
       if ((opt->HighMemSolve == 1) && (rsf != 1)) {
-	if (IMG_ROW_SIZE % 2)
-	  cuda_Cal_grd_C <<< blocksPerGrid_fft, threadsPerBlock >>>
-		 (d_C, d_Df, d_GfW, d_GrdWeight, rho, mu, IMG_ROW_SIZE,
-		  LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);	// comp
-	else
-	  cuda_Cal_grd_C_vec4 <<< blocksPerGrid_radix2_fft, threadsPerBlock >>>
-		(d_C, d_Df, d_GfW, d_GrdWeight, rho, mu, IMG_ROW_SIZE,
-		 LIMIT_X, DICT_M_SIZE, WEIGHT_SIZE);  // comp
+        if (IMG_ROW_SIZE % 2)
+          cuda_Cal_grd_C<<<blocksPerGrid_fft, threadsPerBlock>>>(
+              d_C, d_Df, d_GfW, d_GrdWeight, rho, mu, IMG_ROW_SIZE, LIMIT_X,
+              DICT_M_SIZE, WEIGHT_SIZE); // comp
+        else
+          cuda_Cal_grd_C_vec4<<<blocksPerGrid_radix2_fft, threadsPerBlock>>>(
+              d_C, d_Df, d_GfW, d_GrdWeight, rho, mu, IMG_ROW_SIZE, LIMIT_X,
+              DICT_M_SIZE, WEIGHT_SIZE); // comp
       }
-
     }
 
-    checkCudaErrors(cudaMemcpy(d_Yprv, d_Y, SIZE_X * sizeof (float),
-			       cudaMemcpyDeviceToDevice));
+    checkCudaErrors(cudaMemcpy(d_Yprv, d_Y, SIZE_X * sizeof(float),
+                               cudaMemcpyDeviceToDevice));
 
     checkCudaErrors(cudaDeviceSynchronize());
 
     i++;
-
   }
 
   if (opt->Verbose == 1) {
-    printf ("%s\n", sepstr);
+    printf("%s\n", sepstr);
   }
-
 
   checkCudaErrors(cudaDeviceSynchronize());
 
-  memcpy(Y, d_Y, (int) SIZE_X * sizeof (float));
-
+  memcpy(Y, d_Y, (int)SIZE_X * sizeof(float));
 
   /****************************/
   /****   Release Memory   ****/
