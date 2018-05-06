@@ -2,7 +2,7 @@ sporco_cuda.cbpdn module
 ========================
 
 
-.. py:function:: cbpdn(D, S, lmbda, opt, dev=0)
+.. py:function:: cbpdn(D, s, lmbda, opt, dev=0)
 
    A GPU-accelerated version of :class:`sporco.admm.cbpdn.ConvBPDN`.
 
@@ -10,7 +10,7 @@ sporco_cuda.cbpdn module
    ----------
    D : array_like(float32, ndim=3)
      Dictionary array (three dimensional)
-   S : array_like(ndim=2)
+   s : array_like(float32, ndim=2)
      Signal array (two dimensional)
    lmbda : float32
      Regularisation parameter
@@ -25,6 +25,41 @@ sporco_cuda.cbpdn module
      Coefficient map array (sparse representation)
 
 
+
+.. py:function:: cbpdnmsk(D, s, w, lmbda, opt, dev=0)
+
+   A GPU-accelerated version of :class:`sporco.admm.cbpdn.AddMaskSim` used
+   together with :class:`sporco.admm.cbpdn.ConvBPDN`, providing a spatial
+   mask in the data fidelity term of the functional minimized by this class.
+   Since the spatial mask is implemented via the Additive Mask Simulation
+   method (see the documentation for :class:`sporco.admm.cbpdn.AddMaskSim`),
+   the entries must be in :math:`\{0,1\}`. Note that this GPU version differs
+   from the Python code in its handling of the ``L1Weight`` option: this
+   version automatically adjusts the ``L1Weight`` array, while the Python
+   version requires this to be handled by the calling function.
+
+   Parameters
+   ----------
+   D : array_like(float32, ndim=3)
+     Dictionary array (three dimensional)
+   s : array_like(float32, ndim=2)
+     Signal array (two dimensional)
+   w : array_like
+     Mask array (two dimensional)
+   lmbda : float32
+     Regularisation parameter
+   opt : dict or :class:`sporco.admm.cbpdn.ConvBPDN.Options` object
+     Algorithm options (see :ref:`algorithm-options`)
+   dev : int
+     Device number of GPU device to use
+
+   Returns
+   -------
+   X : ndarray
+     Coefficient map array (sparse representation)
+
+
+
 .. py:function:: cbpdngrd(D, s, lmbda, mu, opt, dev=0)
 
    A GPU-accelerated version of :class:`sporco.admm.cbpdn.ConvBPDNGradReg`.
@@ -33,8 +68,45 @@ sporco_cuda.cbpdn module
    ----------
    D : array_like(float32, ndim=3)
      Dictionary array (three dimensional)
-   S : array_like(ndim=2)
+   s : array_like(float32, ndim=2)
      Signal array (two dimensional)
+   lmbda : float32
+     Regularisation parameter (l1)
+   mu : float
+     Regularisation parameter (gradient)
+   opt : dict or :class:`sporco.admm.cbpdn.ConvBPDNGradReg.Options` object
+     Algorithm options (see :ref:`algorithm-options`)
+   dev : int
+     Device number of GPU device to use
+
+   Returns
+   -------
+   X : ndarray
+     Coefficient map array (sparse representation)
+
+
+
+.. py:function:: cbpdngrdmsk(D, s, w, lmbda, mu, opt, dev=0)
+
+   A GPU-accelerated version of of :class:`sporco.admm.cbpdn.AddMaskSim`
+   used together with :class:`sporco.admm.cbpdn.ConvBPDNGradReg`, providing
+   a spatial mask in the data fidelity term of the functional minimized by
+   this class. Since the spatial mask is implemented via the Additive Mask
+   Simulation method (see the documentation for
+   :class:`sporco.admm.cbpdn.AddMaskSim`),
+   the entries must be in :math:`\{0,1\}`. Note that this GPU version differs
+   from the Python code in its handling of the ``L1Weight`` and ``GradWeight``
+   options: this version automatically adjusts these arrays, while the Python
+   version requires this to be handled by the calling function.
+
+   Parameters
+   ----------
+   D : array_like(float32, ndim=3)
+     Dictionary array (three dimensional)
+   s : array_like(float32, ndim=2)
+     Signal array (two dimensional)
+   w : array_like
+     Mask array (two dimensional)
    lmbda : float32
      Regularisation parameter (l1)
    mu : float
@@ -123,4 +195,4 @@ The algorithm options parameter may either be an appropriate ``sporco`` options 
     :class:`sporco.admm.cbpdn.ConvBPDNGradReg.Options` for more detail).
     **NB**: This option is only relevant to :func:`.cbpdngrd`.
 
-Note that entries in the ``sporco`` options objects that are not listed above are silently ignored.
+Entries in the ``sporco`` options objects that are not listed above are silently ignored.

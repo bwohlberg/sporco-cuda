@@ -63,10 +63,7 @@ cuda_solvedbi_sm_vec4(float2 * Out, float2 * ah, float2 * Dsf,
 
       reinterpret_cast <float4 *>(Out)[index] = x;
     }
-
-
   }
-
 }
 
 
@@ -125,9 +122,7 @@ cuda_solvedbi_sm (float2 * Out, float2 * ah, float2 * Dsf, float rho,
       x.y /= rho;
       Out[index] = x;
     }
-
   }
-
 }
 
 
@@ -144,8 +139,8 @@ cuda_solvedbi_sm (float2 * Out, float2 * ah, float2 * Dsf, float rho,
 // This kernel is working with vectorized data (float4)
 
 __global__ void
-cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, float *L1Weight, int nRows,
-   int nCols, int nFilts, int nL1Weight)
+cuda_Shrink_CalU_vec4_Scalar(float *Y, float *U, float *X, float lambda,
+			     float *L1Weight, int nRows, int nCols, int nFilts)
 {
   unsigned int Tidx = threadIdx.x + blockIdx.x * blockDim.x;
   unsigned int Tidy = threadIdx.y + blockIdx.y * blockDim.y;
@@ -157,10 +152,9 @@ cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, f
   float absxV1, X_tempV1, U_tempV1, Y_tempV1, WLambdaV1;
   float4 absxV4, X_temp, U_temp, Y_temp, WLambda;
 
-  if (nL1Weight == 1) {
-     WLambdaV1 = lambda * L1Weight[0];
-     WLambda = make_float4(WLambdaV1, WLambdaV1, WLambdaV1, WLambdaV1);
-  }
+
+  WLambdaV1 = lambda * L1Weight[0];
+  WLambda = make_float4(WLambdaV1, WLambdaV1, WLambdaV1, WLambdaV1);
 
 
   if (Tidx < nCols) {
@@ -170,11 +164,6 @@ cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, f
 
       U_temp = reinterpret_cast <float4 *>(U)[index];
       X_temp = reinterpret_cast <float4 *>(X)[index];
-
-      if (nL1Weight > 1){
-	WLambda = reinterpret_cast <float4 *>(L1Weight)[index];
-	WLambda = cuCmulf_by_const_vec4(WLambda, lambda);
-      }
 
       Y_temp = operator_vec4(X_temp, U_temp, (nRows * nCols));
 
@@ -198,8 +187,67 @@ cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, f
       X_tempV1 = (X[index] / (nRows * nCols));
       U_tempV1 = U[index];
 
-      if (nL1Weight > 1)
-	WLambdaV1 = lambda * L1Weight[index];
+      Y_tempV1 = X_tempV1 + U_tempV1;
+      absxV1 = fabs (Y_tempV1) - WLambdaV1;
+
+      Y_tempV1 = signbit (-absxV1) * copysign (absxV1, Y_tempV1);
+
+      Y[index] = Y_tempV1;
+      U[index] = U_tempV1 + X_tempV1 - Y_tempV1;
+    }
+  }
+}
+
+
+__global__ void
+cuda_Shrink_CalU_vec4_Array(float *Y, float *U, float *X, float lambda,
+			    float *L1Weight, int nRows, int nCols, int nFilts)
+{
+  unsigned int Tidx = threadIdx.x + blockIdx.x * blockDim.x;
+  unsigned int Tidy = threadIdx.y + blockIdx.y * blockDim.y;
+  unsigned int stride = blockDim.y * gridDim.y, index;
+
+  int Part_Dim = (nRows * nFilts) / 4;
+  int Full_Dim = nRows * nFilts;
+
+  float absxV1, X_tempV1, U_tempV1, Y_tempV1, WLambdaV1;
+  float4 absxV4, X_temp, U_temp, Y_temp, WLambda;
+
+
+  if (Tidx < nCols) {
+
+    for (int i = Tidy; i < Part_Dim; i += stride) {
+      index = Tidx + i * nCols;
+
+      U_temp = reinterpret_cast <float4 *>(U)[index];
+      X_temp = reinterpret_cast <float4 *>(X)[index];
+
+      WLambda = reinterpret_cast <float4 *>(L1Weight)[index];
+      WLambda = cuCmulf_by_const_vec4(WLambda, lambda);
+
+      Y_temp = operator_vec4(X_temp, U_temp, (nRows * nCols));
+
+      absxV4 = fabs_minus_bf4_vec4(Y_temp, WLambda);
+
+      Y_temp.x = signbit (-absxV4.x) * copysign (absxV4.x, Y_temp.x);
+      Y_temp.y = signbit (-absxV4.y) * copysign (absxV4.y, Y_temp.y);
+      Y_temp.z = signbit (-absxV4.z) * copysign (absxV4.z, Y_temp.z);
+      Y_temp.w = signbit (-absxV4.w) * copysign (absxV4.w, Y_temp.w);
+
+      U_temp = operator2_vec4(X_temp, Y_temp, U_temp, (nRows * nCols));
+
+      reinterpret_cast <float4 *>(Y)[index] = Y_temp;
+      reinterpret_cast <float4 *>(U)[index] = U_temp;
+    }
+
+    //Process remaining elements
+    for (int i = Tidy + 4 * Part_Dim; i < Full_Dim; i += stride) {
+      index = Tidx + i * nCols;
+
+      X_tempV1 = (X[index] / (nRows * nCols));
+      U_tempV1 = U[index];
+
+      WLambdaV1 = lambda * L1Weight[index];
 
       Y_tempV1 = X_tempV1 + U_tempV1;
       absxV1 = fabs (Y_tempV1) - WLambdaV1;
@@ -209,16 +257,13 @@ cuda_Shrink_CalU_vec4_Scalar_Array(float *Y, float *U, float *X, float lambda, f
       Y[index] = Y_tempV1;
       U[index] = U_tempV1 + X_tempV1 - Y_tempV1;
     }
-
   }
-
 }
 
 
-
 __global__ void
-cuda_Shrink_CalU_vec4_Vector(float *Y, float *U, float *X, float lambda, float *L1Weight, int nRows,
-   int nCols, int nFilts)
+cuda_Shrink_CalU_vec4_Vector(float *Y, float *U, float *X, float lambda,
+			     float *L1Weight, int nRows, int nCols, int nFilts)
 {
   unsigned int Tidx = threadIdx.x + blockIdx.x * blockDim.x;
   unsigned int Tidy = threadIdx.y + blockIdx.y * blockDim.y, index;
@@ -254,24 +299,20 @@ cuda_Shrink_CalU_vec4_Vector(float *Y, float *U, float *X, float lambda, float *
       reinterpret_cast <float4 *>(Y)[index] = Y_temp;
       reinterpret_cast <float4 *>(U)[index] = U_temp;
     }
-
   }
-
 }
 
 
 
 __global__ void
-cuda_Shrink_CalU_Vector(float *Y, float *U, float *X, float lambda, float *L1Weight, int nRows,
-   int nCols, int nFilts)
+cuda_Shrink_CalU_Vector(float *Y, float *U, float *X, float lambda,
+			float *L1Weight, int nRows, int nCols, int nFilts)
 {
   unsigned int Tidx = threadIdx.x + blockIdx.x * blockDim.x;
   unsigned int Tidy = threadIdx.y + blockIdx.y * blockDim.y, index;
 
   float WLambda;
   float absxV1, X_temp, U_temp, Y_temp;
-
-
 
   if ((Tidx < nCols) & (Tidy < nRows)) {
 
@@ -292,11 +333,8 @@ cuda_Shrink_CalU_Vector(float *Y, float *U, float *X, float lambda, float *L1Wei
       U[index] = U_temp + X_temp - Y_temp;
 
     }
-
   }
-
 }
-
 
 
 
@@ -409,9 +447,7 @@ cuda_Shrink_vec4(float *Y, float *X, float *U, float lambda, int nRows,
 
       Y[index] = tempV1;
     }
-
   }
-
 }
 
 
@@ -451,9 +487,7 @@ cuda_CalU_vec4(float *U, float *X, float *Y, int nRows, int nCols,
       index = Tidx + i * nCols;
       U[index] = U[index] + (X[index] / (nRows * nCols)) - Y[index];
     }
-
   }
-
 }
 
 
@@ -501,9 +535,7 @@ cuda_Cal_Dsf_C_vec4(float2 * Dsf, float2 * C, float2 * Sf, float2 * Df,
       reinterpret_cast <float4 *>(C)[index] =
 	 cuCdivf_vec4(reinterpret_cast <float4 *>(Df)[index], sum_Df);
     }
-
   }
-
 }
 
 
@@ -541,10 +573,7 @@ cuda_Cal_Dsf_C (float2 * Dsf, float2 * C, float2 * Sf, float2 * Df, float rho,
       index = Tidx + (Tidy + nRows * k) * nCols;
       C[index] = cuCdivf (Df[index], sum_Df);
     }
-
-
   }
-
 }
 
 
@@ -586,9 +615,7 @@ cuda_Cal_C_vec4(float2 * C, float2 * Df, float rho, int nRows, int nCols,
       reinterpret_cast <float4 *>(C)[index] =
 	 cuCdivf_vec4(reinterpret_cast <float4 *>(Df)[index], sum_Df);
     }
-
   }
-
 }
 
 
@@ -622,9 +649,7 @@ cuda_Cal_C (float2 * C, float2 * Df, float rho, int nRows, int nCols,
       index = Tidx + (Tidy + nRows * k) * nCols;
       C[index] = cuCdivf (Df[index], sum_Df);
     }
-
   }
-
 }
 
 
@@ -694,9 +719,7 @@ cuda_CalYU_vec4(float *YU, float *Y, float *U, int nRows, int nCols,
       index = Tidx + i * nCols;
       YU[index] = Y[index] - U[index];
     }
-
   }
-
 }
 
 
@@ -739,9 +762,7 @@ cuda_OverRelax_vec4(float *Xr, float *X, float *Y, float RelaxParam,
 	 RelaxParam * X[index] + (1 -
 	 RelaxParam) * Y[index] * (nRows * nCols);
     }
-
   }
-
 }
 
 
@@ -840,7 +861,6 @@ cuda_Cal_residuals_norms_vec4(float *s, float *r, float *nX, float *nY,
     atomicAdd (r, 1e+6 * sumXY);
     atomicAdd (s, 1e+6 * sumYY);
   }
-
 }
 
 
@@ -897,7 +917,6 @@ cuda_norm_vec4(float *nX, float *nY, float *nU, float *X, float *Y, float *U,
       sumX += (X_temp.x * X_temp.x);
 
     }
-
   }
 
   sumX = blockReduceSum (sumX);
@@ -910,7 +929,6 @@ cuda_norm_vec4(float *nX, float *nY, float *nU, float *X, float *Y, float *U,
     atomicAdd (nX, 1e+6 * sumY);
     atomicAdd (nU, 1e+6 * sumU);
   }
-
 }
 
 
@@ -965,7 +983,6 @@ cuda_Cal_residuals_vec4(float *s, float *r, float *X, float *Y, float *Yprv,
       sumXY += (X_temp.x * X_temp.x);
       sumYY += (rho * Y_temp.x * Y_temp.x);
     }
-
   }
 
   sumXY = blockReduceSum (sumXY);
@@ -976,7 +993,6 @@ cuda_Cal_residuals_vec4(float *s, float *r, float *X, float *Y, float *Yprv,
     atomicAdd (r, 1e+6 * sumXY);
     atomicAdd (s, 1e+6 * sumYY);
   }
-
 }
 
 
@@ -1104,7 +1120,6 @@ cuda_L1_Term_vec4(float *d_JL1, float *X, float L1Weight, int factor,
       index = Tidx + i * nCols;
       sum += abs (X[index] / factor);
     }
-
   }
 
   sum = blockReduceSum (sum);
@@ -1112,14 +1127,13 @@ cuda_L1_Term_vec4(float *d_JL1, float *X, float L1Weight, int factor,
 
   if (threadIdx.x == 0)
     atomicAdd (d_JL1, sum);
-
 }
 
 
 
 __global__ void
-cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int factor,
-   int nRows, int nCols, int nFilts, int nL1Weight)
+cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight,
+		 int factor, int nRows, int nCols, int nFilts, int nL1Weight)
 {
   unsigned int Tidx = threadIdx.x + blockIdx.x * blockDim.x;
   unsigned int Tidy = threadIdx.y + blockIdx.y * blockDim.y;
@@ -1148,8 +1162,8 @@ cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int fact
 
 
       sum +=
-	 (abs(WLambda.x * X_temp.x / factor) + abs(WLambda.y * X_temp.y / factor)) +
-	 (abs(WLambda.z * X_temp.z / factor) + abs(WLambda.w * X_temp.w / factor));
+	 (abs(WLambda.x*X_temp.x/factor) + abs(WLambda.y*X_temp.y/factor)) +
+	 (abs(WLambda.z*X_temp.z/factor) + abs(WLambda.w*X_temp.w/factor));
     }
 
 
@@ -1161,14 +1175,12 @@ cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X, float* L1Weight, int fact
 
       sum +=  abs(WLambdaV1 * X[index] / factor);
     }
-
   }
 
   sum = blockReduceSum (sum);
 
   if (threadIdx.x == 0)
     atomicAdd (d_JL1, sum);
-
 }
 
 
@@ -1187,7 +1199,6 @@ cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
   float4 X_temp;
 
 
-
   if ((Tidx < nCols) & (Tidy < Part_nRows)) {
 
     for (int k = 0; k < nFilts; k += 1) {
@@ -1199,9 +1210,7 @@ cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
       sum +=
 	 (abs(WLambda * X_temp.x / factor) + abs(WLambda * X_temp.y / factor)) +
 	 (abs(WLambda * X_temp.z / factor) + abs(WLambda * X_temp.w / factor));
-
     }
-
   }
 
 
@@ -1209,7 +1218,6 @@ cuda_L1_Term_vec4_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
 
   if (threadIdx.x == 0)
     atomicAdd (d_JL1, sum);
-
 }
 
 
@@ -1233,9 +1241,7 @@ cuda_L1_Term_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
       WLambda = L1Weight[k];
 
       sum += (WLambda*X_temp);
-
     }
-
   }
 
 
@@ -1243,8 +1249,32 @@ cuda_L1_Term_Vector(float *d_JL1, float *X, float* L1Weight, int factor,
 
   if (threadIdx.x == 0)
     atomicAdd (d_JL1, sum);
-
 }
+
+
+__global__ void
+cuda_Cal_X_minus_U_W(float *Y, float *U, float *X, int *Weight, int nRows,
+		     int nCols)
+{
+  unsigned int Tidx = threadIdx.x + blockIdx.x * blockDim.x;
+  unsigned int Tidy = threadIdx.y + blockIdx.y * blockDim.y, index;
+
+  float X_temp, U_temp, Y_temp;
+
+  if ((Tidx < nCols) & (Tidy < nRows)) {
+     index = Tidx + Tidy * nCols;
+
+     X_temp = (X[index] / (nRows * nCols));
+     U_temp = U[index];
+
+     Y_temp = (1 - Weight[index]) * (X_temp + U_temp);
+
+     Y[index] = Y_temp;
+     U[index] = U_temp + X_temp - Y_temp;
+  }
+}
+
+
 
 
 
@@ -1281,7 +1311,6 @@ cuda_Cal_Gfw (float *GfW, float2 * Grf, float2 * Gcf, int nRows, int nCols)
     GfW[index] = GfW_temp;
 
   }
-
 }
 
 
@@ -1367,10 +1396,7 @@ cuda_solvedbd_sm_vec4(float2 * Out, float2 * ah, float2 * Dsf, float *GfW,
 
       reinterpret_cast <float4 *>(Out)[index] = x;
     }
-
-
   }
-
 }
 
 
@@ -1445,9 +1471,7 @@ cuda_solvedbd_sm (float2 * Out, float2 * ah, float2 * Dsf, float *GfW,
       x.y /= aux;
       Out[index] = x;
     }
-
   }
-
 }
 
 
@@ -1516,7 +1540,6 @@ cuda_Fidelity_Gr_Term_vec4(float *Jdf, float *Jgr, float2 * Df, float2 * Xf,
     atomicAdd (Jdf, sum);
     atomicAdd (Jgr, sum_Gr);
   }
-
 }
 
 
@@ -1572,7 +1595,6 @@ cuda_Fidelity_Gr_Term (float *Jdf, float *Jgr, float2 * Df, float2 * Xf,
     atomicAdd (Jdf, sum);
     atomicAdd (Jgr, sum_Gr);
   }
-
 }
 
 
@@ -1641,9 +1663,7 @@ cuda_Cal_Dsf_grd_C_vec4(float2 * Dsf, float2 * C, float2 * Sf, float2 * Df,
       reinterpret_cast <float4 *>(C)[index] =
 	 make_float4 (ah.x / aux.x, ah.y / aux.x, ah.z / aux.y, ah.w / aux.y);
     }
-
   }
-
 }
 
 
@@ -1695,10 +1715,7 @@ cuda_Cal_Dsf_grd_C (float2 * Dsf, float2 * C, float2 * Sf, float2 * Df,
 
       C[index] = make_cuFloatComplex (ah.x / aux, ah.y / aux);
     }
-
-
   }
-
 }
 
 
@@ -1760,9 +1777,7 @@ cuda_Cal_grd_C_vec4(float2 * C, float2 * Df, float *GfW, float *GrdWeight,
       reinterpret_cast <float4 *>(C)[index] =
 	 make_float4 (ah.x / aux.x, ah.y / aux.x, ah.z / aux.y, ah.w / aux.y);
     }
-
   }
-
 }
 
 
@@ -1809,7 +1824,5 @@ cuda_Cal_grd_C (float2 * C, float2 * Df, float *GfW, float *GrdWeight,
 
       C[index] = make_cuFloatComplex (ah.x / aux, ah.y / aux);
     }
-
   }
-
 }

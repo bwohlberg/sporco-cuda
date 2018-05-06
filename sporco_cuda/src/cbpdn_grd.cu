@@ -118,6 +118,7 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
 
   float *d_S, *d_D, *d_Y, *d_X, *d_Xr, *d_U, *d_aux, *d_Yprv;
   float *d_GfW, *d_L1Weight, *d_GrdWeight;
+  int *d_Weight;
 
   cufftComplex *d_auxf, *d_Df, *d_Dsf, *d_C, *d_Sf;
 
@@ -138,6 +139,10 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   int L1_WEIGHT_ROW_SIZE = opt->L1_WEIGHT_ROW_SIZE;
   int L1_WEIGHT_COL_SIZE = opt->L1_WEIGHT_COL_SIZE;
   int nL1Weight = L1_WEIGHT_ROW_SIZE * L1_WEIGHT_COL_SIZE * L1_WEIGHT_M_SIZE;
+
+  int nWeight = opt->nWeight;
+  int W_flag = (nWeight > 1) ? 1 : 0;
+  int offset_W;
 
   int MAX_ITER = opt->MaxMainIter;
   int WEIGHT_SIZE = opt->WEIGHT_SIZE;
@@ -225,7 +230,12 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   checkCudaErrors(cudaMalloc((void **) &d_auxf, SIZE_Xf * sizeof (float2)));
   checkCudaErrors(cudaMalloc((void **) &d_GfW, SIZE_Sf * sizeof (float)));
 
-  checkCudaErrors(cudaMalloc((void **) &d_L1Weight, nL1Weight * sizeof (float)));
+  checkCudaErrors(cudaMalloc((void **) &d_L1Weight,
+			     nL1Weight * sizeof (float)));
+
+  if (nWeight > 1) {
+    checkCudaErrors(cudaMalloc ((void **) &d_Weight, nWeight * sizeof (int)));
+  }
 
   /******************************************/
   /****   Define Block and Thread Size   ****/
@@ -273,6 +283,10 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
 			     nL1Weight * sizeof (float),
 			     cudaMemcpyHostToDevice));
 
+  if (nWeight > 1) {
+    checkCudaErrors(cudaMemcpy(d_Weight, opt->Weight, nWeight * sizeof (int),
+		    cudaMemcpyHostToDevice));
+  }
 
   /****************************************/
   /****   Calculates Fixed Variables   ****/
@@ -404,20 +418,42 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
 
     // Calculates Y = shinkage(X + U, L1Weight*lamdba/rho) and U = U + X - Y
     // (both steps in a single kernel in order to reduce access memory expenses)
+
+    offset_W = IMG_ROW_SIZE*IMG_COL_SIZE*W_flag;
+
     if (nL1Weight == DICT_M_SIZE){
-       if ((IMG_ROW_SIZE % 4) == 0)
+       if ((IMG_ROW_SIZE % 4) == 0){
 	   cuda_Shrink_CalU_vec4_Vector<<< blocksPerGrid_vec4,
-	     threadsPerBlock >>> (d_Y, d_U, d_Xr, lambda/rho, d_L1Weight,
-				  IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE);
-	else
+	     threadsPerBlock >>> (&d_Y[offset_W], &d_U[offset_W],
+			    &d_Xr[offset_W], lambda/rho, &d_L1Weight[W_flag],
+			    IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE-W_flag);}
+	else{
 	   cuda_Shrink_CalU_Vector <<< blocksPerGrid, threadsPerBlock >>>
-		 (d_Y, d_U, d_Xr, lambda/rho, d_L1Weight,
-		  IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE);
+		 (&d_Y[offset_W], &d_U[offset_W],
+		  &d_Xr[offset_W], lambda/rho, &d_L1Weight[W_flag],
+		  IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE-W_flag);}
+    }
+    else if (nL1Weight == 1) {
+	cuda_Shrink_CalU_vec4_Scalar <<< blocksPerGrid,
+	  threadsPerBlock >>> (&d_Y[offset_W], &d_U[offset_W],
+			   &d_Xr[offset_W], lambda/rho, d_L1Weight,
+			   IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE - W_flag);
     }
     else {
-	cuda_Shrink_CalU_vec4_Scalar_Array <<< blocksPerGrid,
-	  threadsPerBlock >>> (d_Y, d_U, d_Xr, lambda/rho, d_L1Weight,
-	     IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE, nL1Weight); }
+	cuda_Shrink_CalU_vec4_Array<<< blocksPerGrid,
+	  threadsPerBlock >>> (&d_Y[offset_W], &d_U[offset_W],
+			  &d_Xr[offset_W], lambda/rho, &d_L1Weight[offset_W],
+			  IMG_ROW_SIZE, IMG_COL_SIZE, DICT_M_SIZE - W_flag);
+    }
+
+
+
+    if (W_flag == 1)
+    {
+      cuda_Cal_X_minus_U_W<<< blocksPerGrid,
+	     threadsPerBlock >>> (d_Y, d_U, d_Xr, d_Weight,
+				  IMG_ROW_SIZE, IMG_COL_SIZE);
+    }
 
 
     // compute distances between X and Y,  Y and Yprv
@@ -639,6 +675,8 @@ cuda_wrapper_CBPDN_GR (float *D, float *S, float lambda, float mu,
   checkCudaErrors(cudaFree(d_nY));
   checkCudaErrors(cudaFree(d_nU));
 
+  if (nWeight > 1)
+    checkCudaErrors(cudaFree(d_Weight));
   checkCudaErrors(cudaFree(d_L1Weight));
   checkCudaErrors(cudaFree(d_GfW));
   checkCudaErrors(cudaFree(d_GrdWeight));

@@ -22,6 +22,8 @@ void default_opts(void *data){
   if (opt->Verbose == -1)        opt->Verbose = 0;
   if (opt->AutoRho == -1)        opt->AutoRho = 1;
 
+  if (opt->nWeight == -1)        opt->nWeight = 1;
+
   if (opt->AuxVarObj == -1)      opt->AuxVarObj = 0;
 
   if (opt->AbsStopTol == -1)     opt->AbsStopTol = 0;
@@ -56,6 +58,9 @@ void clear_opts(void *data){
   opt->AutoRho = -1;
 
   opt->L1Weight  =  ((float *) calloc(1, sizeof(float)) );
+  opt->Weight    =  ((int *) calloc(1, sizeof(int)) );
+  opt->nWeight    =  -1;
+
   opt->AuxVarObj = -1;
 
   opt->AbsStopTol = -1;

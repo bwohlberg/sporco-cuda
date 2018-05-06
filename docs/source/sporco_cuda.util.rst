@@ -37,4 +37,20 @@ sporco_cuda.util module
    free : int
      Free memory in bytes
    total : int
-      Total memory in bytes
+     Total memory in bytes
+
+
+.. py:function:: device_name(int dev=0)
+
+   Get hardware model name for the specified CUDA GPU device.
+
+
+   Parameters
+   ----------
+   id : int, optional (default 0)
+     Device number of device
+
+   Returns
+   -------
+   name : string
+     Hardware device name

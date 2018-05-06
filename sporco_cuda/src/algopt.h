@@ -22,6 +22,9 @@ typedef struct AlgOpt {
   int     L1_WEIGHT_ROW_SIZE;
   int     L1_WEIGHT_COL_SIZE;
 
+  int*    Weight;
+  int     nWeight;
+
   int     Verbose;
   int     NonNegCoef;
   int     NoBndryCross;

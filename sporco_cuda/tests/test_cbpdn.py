@@ -7,6 +7,7 @@ import numpy as np
 from sporco.admm import cbpdn
 import sporco_cuda.cbpdn as cucbpdn
 import sporco.metric as sm
+import sporco.util as su
 
 
 
@@ -183,4 +184,127 @@ class TestSet01(object):
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
+        assert(sm.mse(X1, X2) < 1e-10)
+
+
+
+    def test_10(self):
+        Nr = 32
+        Nc = 31
+        Nd = 5
+        M = 4
+        D = np.random.randn(Nd, Nd, M).astype(np.float32)
+        s = np.random.randn(Nr, Nc).astype(np.float32)
+        frc = 0.5
+        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        s *= msk
+        lmbda = 1e-1
+        opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
+                                      'AutoRho': {'Enabled': False}})
+        b = cbpdn.AddMaskSim(cbpdn.ConvBPDN, D, s, msk, lmbda, opt=opt)
+        X1 = b.solve()
+        X2 = cucbpdn.cbpdnmsk(D, s, msk, lmbda, opt)
+        assert(sm.mse(X1, X2) < 1e-10)
+
+
+
+    def test_11(self):
+        Nr = 32
+        Nc = 31
+        Nd = 5
+        M = 4
+        D = np.random.randn(Nd, Nd, M).astype(np.float32)
+        s = np.random.randn(Nr, Nc).astype(np.float32)
+        frc = 0.5
+        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        s *= msk
+        lmbda = 1e-1
+        Wl1 = np.random.randn(1, 1, M).astype(np.float32)
+        Wl1i = np.concatenate((Wl1, np.ones(Wl1.shape[0:-1] + (1,))),
+                              axis=-1)
+        opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
+                                      'AutoRho': {'Enabled': False}})
+        opt['L1Weight'] = Wl1i
+        b = cbpdn.AddMaskSim(cbpdn.ConvBPDN, D, s, msk, lmbda, opt=opt)
+        X1 = b.solve()
+        opt['L1Weight'] = Wl1
+        X2 = cucbpdn.cbpdnmsk(D, s, msk, lmbda, opt)
+        assert(sm.mse(X1, X2) < 1e-10)
+
+
+
+    def test_12(self):
+        Nr = 32
+        Nc = 31
+        Nd = 5
+        M = 4
+        D = np.random.randn(Nd, Nd, M).astype(np.float32)
+        s = np.random.randn(Nr, Nc).astype(np.float32)
+        frc = 0.5
+        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        s *= msk
+        lmbda = 1e-1
+        mu = 1e-2
+        Wgrdi = np.hstack((np.ones(M,), np.zeros((1,))))
+        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
+                'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
+        opt['GradWeight'] = Wgrdi
+        b = cbpdn.AddMaskSim(cbpdn.ConvBPDNGradReg, D, s, msk, lmbda, mu, opt)
+        X1 = b.solve()
+        opt['GradWeight'] = 1.0
+        X2 = cucbpdn.cbpdngrdmsk(D, s, msk, lmbda, mu, opt)
+        assert(sm.mse(X1, X2) < 1e-10)
+
+
+
+    def test_13(self):
+        Nr = 32
+        Nc = 31
+        Nd = 5
+        M = 4
+        D = np.random.randn(Nd, Nd, M).astype(np.float32)
+        s = np.random.randn(Nr, Nc).astype(np.float32)
+        frc = 0.5
+        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        s *= msk
+        lmbda = 1e-1
+        mu = 1e-2
+        Wl1 = np.random.randn(1, 1, M).astype(np.float32)
+        Wl1i = np.concatenate((Wl1, np.ones(Wl1.shape[0:-1] + (1,))),
+                              axis=-1)
+        Wgrdi = np.hstack((np.ones(M,), np.zeros((1,))))
+        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
+                'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
+        opt['L1Weight'] = Wl1i
+        opt['GradWeight'] = Wgrdi
+        b = cbpdn.AddMaskSim(cbpdn.ConvBPDNGradReg, D, s, msk, lmbda, mu, opt)
+        X1 = b.solve()
+        opt['L1Weight'] = Wl1
+        opt['GradWeight'] = 1.0
+        X2 = cucbpdn.cbpdngrdmsk(D, s, msk, lmbda, mu, opt)
+        assert(sm.mse(X1, X2) < 1e-10)
+
+
+
+    def test_14(self):
+        Nr = 32
+        Nc = 31
+        Nd = 5
+        M = 4
+        D = np.random.randn(Nd, Nd, M).astype(np.float32)
+        s = np.random.randn(Nr, Nc).astype(np.float32)
+        frc = 0.5
+        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        s *= msk
+        lmbda = 1e-1
+        mu = 1e-2
+        Wgrd = np.random.randn(M).astype(np.float32)
+        Wgrdi = np.hstack((Wgrd, np.zeros((1,))))
+        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
+                'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
+        opt['GradWeight'] = Wgrdi
+        b = cbpdn.AddMaskSim(cbpdn.ConvBPDNGradReg, D, s, msk, lmbda, mu, opt)
+        X1 = b.solve()
+        opt['GradWeight'] = Wgrd
+        X2 = cucbpdn.cbpdngrdmsk(D, s, msk, lmbda, mu, opt)
         assert(sm.mse(X1, X2) < 1e-10)

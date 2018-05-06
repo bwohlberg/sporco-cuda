@@ -22,6 +22,8 @@ cdef extern from "algopt.h":
        int     L1_WEIGHT_M_SIZE
        int     L1_WEIGHT_ROW_SIZE
        int     L1_WEIGHT_COL_SIZE
+       int*    Weight
+       int     nWeight
        int     Verbose
        int     NonNegCoef
        int     NoBndryCross
@@ -85,15 +87,45 @@ def cbpdn(np.ndarray[DTYPE_t, ndim=3] D not None,
           np.ndarray[DTYPE_t, ndim=2] S not None,
           DTYPE_t lmbda, opt, int dev=0):
 
+    W = np.ones((1, 1), dtype=np.dtype("i"))
     X = _cbpdn(np.ascontiguousarray(np.rollaxis(D, 2, 0)),
-               np.ascontiguousarray(S), lmbda, dict(opt), dev)
+               np.ascontiguousarray(S), np.ascontiguousarray(W),
+               lmbda, dict(opt), dev)
     return np.rollaxis(X, 0, 3)
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def cbpdnmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
+             np.ndarray[DTYPE_t, ndim=2] S not None,
+             np.ndarray W, DTYPE_t lmbda, opt, int dev=0):
+
+    d0 = np.zeros((D.shape[0], D.shape[1], 1), dtype=DTYPE)
+    d0[0, 0] = 1.0
+    Di = np.dstack((d0, D))
+
+    if hasattr(opt['L1Weight'], 'ndim'):
+        w0 = np.zeros(opt['L1Weight'].shape[0:-1] + (1,), dtype=DTYPE)
+        opt['L1Weight'] = np.dstack((w0, opt['L1Weight']))
+    else:
+        opt['L1Weight'] = opt['L1Weight'] * np.ones((1, 1, Di.shape[2]),
+                                                    dtype=DTYPE)
+        opt['L1Weight'][..., 0] = 0.0
+
+    X = _cbpdn(np.ascontiguousarray(np.rollaxis(Di, 2, 0)),
+               np.ascontiguousarray(S),
+               np.ascontiguousarray(W, dtype=np.dtype("i")),
+               lmbda, dict(opt), dev)
+    return np.rollaxis(X, 0, 3)[..., 1:]
+
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef _cbpdn(np.ndarray[DTYPE_t, ndim=3, mode="c"] D,
           np.ndarray[DTYPE_t, ndim=2, mode="c"] S,
+          np.ndarray[int, ndim=2, mode="c"] W,
           DTYPE_t lmbda, dict opt, int dev):
 
     cdef AlgOpt algopt
@@ -128,6 +160,10 @@ cdef _cbpdn(np.ndarray[DTYPE_t, ndim=3, mode="c"] D,
         algopt.L1_WEIGHT_M_SIZE = 1
     algopt.L1Weight = &gl1w[0,0,0]
 
+    if W.size > 1:
+        algopt.Weight = &W[0,0]
+        algopt.nWeight = W.size
+
     cuda_wrapper_CBPDN(&D[0,0,0], &S[0,0], lmbda, &algopt, &X[0,0,0])
 
     return X
@@ -140,15 +176,54 @@ def cbpdngrd(np.ndarray[DTYPE_t, ndim=3] D not None,
           np.ndarray[DTYPE_t, ndim=2] S not None,
           DTYPE_t lmbda, DTYPE_t mu, opt, int dev=0):
 
+    W = np.ones((1, 1), dtype=np.dtype("i"))
     X = _cbpdngrd(np.ascontiguousarray(np.rollaxis(D, 2, 0)),
-               np.ascontiguousarray(S), lmbda, mu, dict(opt), dev)
+               np.ascontiguousarray(S), np.ascontiguousarray(W),
+               lmbda, mu, dict(opt), dev)
     return np.rollaxis(X, 0, 3)
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def cbpdngrdmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
+          np.ndarray[DTYPE_t, ndim=2] S not None,
+          np.ndarray W, DTYPE_t lmbda, DTYPE_t mu, opt, int dev=0):
+
+
+    d0 = np.zeros((D.shape[0], D.shape[1], 1), dtype=DTYPE)
+    d0[0, 0] = 1.0
+    Di = np.dstack((d0, D))
+
+    if hasattr(opt['L1Weight'], 'ndim'):
+        w0 = np.zeros(opt['L1Weight'].shape[0:-1] + (1,), dtype=DTYPE)
+        opt['L1Weight'] = np.dstack((w0, opt['L1Weight']))
+    else:
+        opt['L1Weight'] = opt['L1Weight'] * np.ones((1, 1, Di.shape[2]),
+                                                    dtype=DTYPE)
+        opt['L1Weight'][..., 0] = 0.0
+
+    if hasattr(opt['GradWeight'], 'ndim'):
+        w0 = np.zeros((1,), dtype=DTYPE)
+        opt['GradWeight'] = np.hstack((w0, opt['GradWeight']))
+    else:
+        opt['GradWeight'] = opt['GradWeight'] * np.ones((Di.shape[2],),
+                                                      dtype=DTYPE)
+        opt['GradWeight'][..., 0] = 0.0
+
+    X = _cbpdngrd(np.ascontiguousarray(np.rollaxis(Di, 2, 0)),
+                  np.ascontiguousarray(S),
+                  np.ascontiguousarray(W, dtype=np.dtype("i")),
+                  lmbda, mu, dict(opt), dev)
+    return np.rollaxis(X, 0, 3)[..., 1:]
+
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef _cbpdngrd(np.ndarray[DTYPE_t, ndim=3, mode="c"] D,
              np.ndarray[DTYPE_t, ndim=2, mode="c"] S,
+             np.ndarray[int, ndim=2, mode="c"] W,
              DTYPE_t lmbda, DTYPE_t mu, dict opt, int dev):
 
     cdef AlgOpt algopt
@@ -191,6 +266,10 @@ cdef _cbpdngrd(np.ndarray[DTYPE_t, ndim=3, mode="c"] D,
         gw[0] = opt['GradWeight']
     algopt.WEIGHT_SIZE = gw.shape[0]
     algopt.GrdWeight = &gw[0]
+
+    if W.size > 1:
+        algopt.Weight = &W[0,0]
+        algopt.nWeight = W.size
 
     cuda_wrapper_CBPDN_GR(&D[0,0,0], &S[0,0], lmbda, mu, &algopt, &X[0,0,0])
 

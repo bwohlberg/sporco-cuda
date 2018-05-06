@@ -4,8 +4,14 @@ CUDA CSC Examples
 cmp_cbpdn.py
   Compare Python and CUDA solve times for ConvBPDN problem
 
+cmp_cbpdmsk.py
+  Compare Python and CUDA solve times for AddMaskSim/ConvBPDN problem
+
 cmp_cbpdngrd.py
   Compare Python and CUDA solve times for ConvBPDNGradReg problem
+
+cmp_cbpdngrdmsk.py
+  Compare Python and CUDA solve times for AddMaskSim/ConvBPDNGradReg problem
 
 time_cbpdn.py
   Compute initialisation and solve time per iteration for CUDA ConvBPDN solver
