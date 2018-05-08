@@ -51,6 +51,7 @@ b = cbpdn.ConvBPDNGradReg(D, sh, lmbda, mu, opt)
 X1 = b.solve()
 print("ConvBPDNGradReg solve time: %.2fs" % b.timer.elapsed('solve'))
 
+
 # Time CUDA ConvBPDNGradReg solve
 t = util.Timer()
 with util.ContextTimer(t):
@@ -58,6 +59,7 @@ with util.ContextTimer(t):
 print("GPU ConvBPDNGradReg solve time: %.2fs" % t.elapsed())
 print("GPU time improvement factor: %.1f" % (b.timer.elapsed('solve') /
                                              t.elapsed()))
+
 
 # Compare CPU and GPU solutions
 print("CPU solution:  min: %.4e  max: %.4e   l1: %.4e" %

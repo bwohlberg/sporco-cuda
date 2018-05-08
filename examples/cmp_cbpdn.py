@@ -49,15 +49,18 @@ b = cbpdn.ConvBPDN(D, sh, lmbda, opt)
 X1 = b.solve()
 print("ConvBPDN solve time: %.2fs" % b.timer.elapsed('solve'))
 
+
 # Time CUDA ConvBPDN solve
 t = util.Timer()
 with util.ContextTimer(t):
     X2 = cucbpdn.cbpdn(D, sh, lmbda, opt)
 
+
 # Solve time comparison
 print("GPU ConvBPDN solve time: %.2fs" % t.elapsed())
 print("GPU time improvement factor: %.1f" % (b.timer.elapsed('solve') /
                                              t.elapsed()))
+
 
 # Compare CPU and GPU solutions
 print("CPU solution:  min: %.4e  max: %.4e   l1: %.4e" %

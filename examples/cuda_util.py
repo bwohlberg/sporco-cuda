@@ -14,6 +14,7 @@ from builtins import range
 
 import sporco_cuda.util as cu
 
+
 ndev = cu.device_count()
 print('Found %d CUDA device(s)' % ndev)
 if ndev > 0:

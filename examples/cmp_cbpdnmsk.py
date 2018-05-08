@@ -57,15 +57,18 @@ b = cbpdn.AddMaskSim(cbpdn.ConvBPDN, D, shw, msk, lmbda, opt=opt)
 X1 = b.solve()
 print("AddMaskSim/ConvBPDN solve time: %.2fs" % b.timer.elapsed('solve'))
 
+
 # Time CUDA AddMaskSim/ConvBPDN solve
 t = util.Timer()
 with util.ContextTimer(t):
     X2 = cucbpdn.cbpdnmsk(D, shw, msk, lmbda, opt)
 
+
 # Solve time comparison
 print("GPU AddMaskSim/ConvBPDN solve time: %.2fs" % t.elapsed())
 print("GPU time improvement factor: %.1f" % (b.timer.elapsed('solve') /
                                              t.elapsed()))
+
 
 # Compare CPU and GPU solutions
 print("CPU solution:  min: %.4e  max: %.4e   l1: %.4e" %

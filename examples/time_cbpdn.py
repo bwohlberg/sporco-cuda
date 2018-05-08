@@ -43,10 +43,12 @@ opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 0,
                     'RelStopTol': 1e-5, 'AuxVarObj': False,
                     'AutoRho': {'Enabled': False}})
 
+
 # Compute initialisation time: solve with 0 iterations
 t0 = util.Timer()
 with util.ContextTimer(t0):
     X = cucbpdn.cbpdn(D, sh, lmbda, opt)
+
 
 # Solve with Niter iterations
 Niter = 200
@@ -55,5 +57,7 @@ t1 = util.Timer()
 with util.ContextTimer(t1):
     X = cucbpdn.cbpdn(D, sh, lmbda, opt)
 
+
+# Print run time information
 print("GPU ConvBPDN init time: %.3fs" % t0.elapsed())
 print("GPU ConvBPDN solve time per iteration: %.3fs" % (t1.elapsed() / Niter))
