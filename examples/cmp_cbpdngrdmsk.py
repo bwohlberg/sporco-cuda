@@ -33,17 +33,24 @@ fltlmbd = 5
 sl, sh = util.tikhonov_filter(img, fltlmbd, npd)
 
 
-
 # Apply random mask to highpass component
 frc = 0.5
 np.random.seed(12345)
 msk = util.rndmask(img.shape, frc, dtype=np.float32)
-#msk = np.ones((1, 1), dtype=np.float32)
 shw = msk * sh
 
 
 # Load dictionary
 D = util.convdicts()['G:12x12x72']
+
+
+# Construct GradWeight option array that is required due to different
+# handling of the ℓ2 of gradient term by the Python and CUDA code: the
+# former applies this term to all dictionary elements, including the
+# impulse filter inserted by cbpdn.AddMaskSim, while the latter
+# excludes the impulse filter from this term
+wgrd = np.ones((D.shape[-1]+1,), dtype=np.float32)
+wgrd[-1] = 0.0
 
 
 # Set up ConvBPDNGradReg options
@@ -56,18 +63,22 @@ opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': True, 'MaxMainIter': 20,
 
 
 # Initialise and run AddMaskSim/ConvBPDNGradReg object
+opt['GradWeight'] = wgrd
 b = cbpdn.AddMaskSim(cbpdn.ConvBPDNGradReg, D, shw, msk, lmbda, mu, opt)
 X1 = b.solve()
 print("AddMaskSim/ConvBPDNGradReg solve time: %.2fs" %
       b.timer.elapsed('solve'))
 
+
 # Time CUDA AddMaskSim/ConvBPDNGradReg solve
+opt['GradWeight'] = 1.0
 t = util.Timer()
 with util.ContextTimer(t):
     X2 = cucbpdn.cbpdngrdmsk(D, shw, msk, lmbda, mu, opt)
 print("GPU AddMaskSim/ConvBPDNGradReg solve time: %.2fs" % t.elapsed())
 print("GPU time improvement factor: %.1f" % (b.timer.elapsed('solve') /
                                              t.elapsed()))
+
 
 # Compare CPU and GPU solutions
 print("CPU solution:  min: %.4e  max: %.4e   l1: %.4e" %
