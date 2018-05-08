@@ -61,7 +61,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'sporco-cuda'
-copyright = '2017, Gustavo Silva, Brendt Wohlberg'
+copyright = '2017-2018, Gustavo Silva, Brendt Wohlberg'
 author = 'Gustavo Silva, Brendt Wohlberg'
 
 # The version info for the project you're documenting, acts as replacement for
