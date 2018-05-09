@@ -6,6 +6,7 @@ sporco_cuda.cbpdn module
 
    A GPU-accelerated version of :class:`sporco.admm.cbpdn.ConvBPDN`.
 
+
    Parameters
    ----------
    D : array_like(float32, ndim=3)
@@ -32,11 +33,17 @@ sporco_cuda.cbpdn module
    together with :class:`sporco.admm.cbpdn.ConvBPDN`, providing a spatial
    mask in the data fidelity term of the functional minimized by this class.
    Since the spatial mask is implemented via the Additive Mask Simulation
-   method (see the documentation for :class:`sporco.admm.cbpdn.AddMaskSim`),
-   the entries must be in :math:`\{0,1\}`. Note that this GPU version differs
+   (AMS) method (see `doi:10.1109/ICIP.2016.7532675
+   <http://brendt.wohlberg.net/publications/wohlberg-2016-boundary.html>`__
+   and the documentation for :class:`sporco.admm.cbpdn.AddMaskSim`), the
+   entries must be in :math:`\{0,1\}`. Note that this GPU version differs
    from the Python code in its handling of the ``L1Weight`` option: this
-   version automatically adjusts the ``L1Weight`` array, while the Python
-   version requires this to be handled by the calling function.
+   version automatically adjusts this array to account for the AMS impulse
+   filter that is inserted into the dictionary, while the Python version
+   requires this to be handled by the calling function. In addition, this
+   version prepends the AMS impulse filter at the start of the dictionary,
+   while the Python version appends it at the end.
+
 
    Parameters
    ----------
@@ -63,6 +70,7 @@ sporco_cuda.cbpdn module
 .. py:function:: cbpdngrd(D, s, lmbda, mu, opt, dev=0)
 
    A GPU-accelerated version of :class:`sporco.admm.cbpdn.ConvBPDNGradReg`.
+
 
    Parameters
    ----------
@@ -92,12 +100,18 @@ sporco_cuda.cbpdn module
    used together with :class:`sporco.admm.cbpdn.ConvBPDNGradReg`, providing
    a spatial mask in the data fidelity term of the functional minimized by
    this class. Since the spatial mask is implemented via the Additive Mask
-   Simulation method (see the documentation for
-   :class:`sporco.admm.cbpdn.AddMaskSim`),
-   the entries must be in :math:`\{0,1\}`. Note that this GPU version differs
-   from the Python code in its handling of the ``L1Weight`` and ``GradWeight``
-   options: this version automatically adjusts these arrays, while the Python
-   version requires this to be handled by the calling function.
+   Simulation (AMS) method (see `doi:10.1109/ICIP.2016.7532675
+   <http://brendt.wohlberg.net/publications/wohlberg-2016-boundary.html>`__
+   and the documentation for :class:`sporco.admm.cbpdn.AddMaskSim`), the
+   entries must be in :math:`\{0,1\}`. Note that this GPU version differs
+   from the Python code in its handling of the ``L1Weight`` and
+   ``GradWeight`` options: this version automatically adjusts these arrays
+   to account for the AMS impulse filter that is inserted into the
+   dictionary, while the Python version requires this to be handled by the
+   calling function. In addition, this version prepends the AMS impulse
+   filter at the start of the dictionary, while the Python version appends
+   it at the end.
+
 
    Parameters
    ----------
