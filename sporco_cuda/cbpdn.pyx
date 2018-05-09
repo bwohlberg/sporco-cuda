@@ -87,10 +87,18 @@ def cbpdn(np.ndarray[DTYPE_t, ndim=3] D not None,
           np.ndarray[DTYPE_t, ndim=2] S not None,
           DTYPE_t lmbda, opt, int dev=0):
 
+    # No spatial mask for this problem so we pass a 1 x 1 array with a
+    # unit entry as the corresponding mask array
     W = np.ones((1, 1), dtype=np.dtype("i"))
+
+    # Call main implementation for CBPDN problem. The use of np.rollaxis
+    # is required because the CUDA implementation assumes Matlab array
+    # layout.
     X = _cbpdn(np.ascontiguousarray(np.rollaxis(D, 2, 0)),
                np.ascontiguousarray(S), np.ascontiguousarray(W),
                lmbda, dict(opt), dev)
+
+    # Return the coefficient map array
     return np.rollaxis(X, 0, 3)
 
 
@@ -101,22 +109,40 @@ def cbpdnmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
              np.ndarray[DTYPE_t, ndim=2] S not None,
              np.ndarray W, DTYPE_t lmbda, opt, int dev=0):
 
+    # Prepend an impulse filter as the initial dictionary filter, for use
+    # within the Additive Mask Simulation (AMS) method for implementing a
+    # spatial mask in the data fidelity term (see
+    # doi: 10.1109/ICIP.2016.7532675)
     d0 = np.zeros((D.shape[0], D.shape[1], 1), dtype=DTYPE)
     d0[0, 0] = 1.0
     Di = np.dstack((d0, D))
 
+    # Check whether the L1Weight option is an array or a scalar
     if hasattr(opt['L1Weight'], 'ndim'):
+        # If the L1Weight option is an array, prepend a zero array of the
+        # appropriate shape so that ℓ1 regularization is not applied to
+        # the initial AMS impulse filter in the dictionary
         w0 = np.zeros(opt['L1Weight'].shape[0:-1] + (1,), dtype=DTYPE)
         opt['L1Weight'] = np.dstack((w0, opt['L1Weight']))
     else:
+        # If the L1Weight option is a scalar, set it to a constant array
+        # of the same value and then set the first entry to zero so that
+        # ℓ1 regularization is not applied to the initial AMS impulse
+        # filter in the dictionary
         opt['L1Weight'] = opt['L1Weight'] * np.ones((1, 1, Di.shape[2]),
                                                     dtype=DTYPE)
         opt['L1Weight'][..., 0] = 0.0
 
+    # Call main implementation for CBPDN problem. The use of np.rollaxis
+    # is required because the CUDA implementation assumes Matlab array
+    # layout.
     X = _cbpdn(np.ascontiguousarray(np.rollaxis(Di, 2, 0)),
                np.ascontiguousarray(S),
                np.ascontiguousarray(W, dtype=np.dtype("i")),
                lmbda, dict(opt), dev)
+
+    # Return the coefficient map array, slicing off the initial coefficient
+    # map corresponding to the AMS impulse filter
     return np.rollaxis(X, 0, 3)[..., 1:]
 
 
@@ -176,10 +202,18 @@ def cbpdngrd(np.ndarray[DTYPE_t, ndim=3] D not None,
           np.ndarray[DTYPE_t, ndim=2] S not None,
           DTYPE_t lmbda, DTYPE_t mu, opt, int dev=0):
 
+    # No spatial mask for this problem so we pass a 1 x 1 array with a
+    # unit entry as the corresponding mask array
     W = np.ones((1, 1), dtype=np.dtype("i"))
+
+    # Call main implementation for CBPDNGradReg problem. The use of
+    # np.rollaxis is required because the CUDA implementation assumes
+    # Matlab array layout.
     X = _cbpdngrd(np.ascontiguousarray(np.rollaxis(D, 2, 0)),
                np.ascontiguousarray(S), np.ascontiguousarray(W),
                lmbda, mu, dict(opt), dev)
+
+    # Return the coefficient map array
     return np.rollaxis(X, 0, 3)
 
 
@@ -190,31 +224,56 @@ def cbpdngrdmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
           np.ndarray[DTYPE_t, ndim=2] S not None,
           np.ndarray W, DTYPE_t lmbda, DTYPE_t mu, opt, int dev=0):
 
-
+    # Prepend an impulse filter as the initial dictionary filter, for use
+    # within the Additive Mask Simulation (AMS) method for implementing a
+    # spatial mask in the data fidelity term (see
+    # doi: 10.1109/ICIP.2016.7532675)
     d0 = np.zeros((D.shape[0], D.shape[1], 1), dtype=DTYPE)
     d0[0, 0] = 1.0
     Di = np.dstack((d0, D))
 
+    # Check whether the L1Weight option is an array or a scalar
     if hasattr(opt['L1Weight'], 'ndim'):
+        # If the L1Weight option is an array, prepend a zero array of the
+        # appropriate shape so that ℓ1 regularization is not applied to
+        # the initial AMS impulse filter in the dictionary
         w0 = np.zeros(opt['L1Weight'].shape[0:-1] + (1,), dtype=DTYPE)
         opt['L1Weight'] = np.dstack((w0, opt['L1Weight']))
     else:
+        # If the L1Weight option is a scalar, set it to a constant array
+        # of the same value and then set the first entry to zero so that
+        # ℓ1 regularization is not applied to the initial AMS impulse
+        # filter in the dictionary
         opt['L1Weight'] = opt['L1Weight'] * np.ones((1, 1, Di.shape[2]),
                                                     dtype=DTYPE)
         opt['L1Weight'][..., 0] = 0.0
 
+    # Check whether the GradWeight option is an array or a scalar
     if hasattr(opt['GradWeight'], 'ndim'):
+        # If the GradWeight option is an array, prepend a zero entry
+        # so that ℓ2 of gradient regularization is not applied to the
+        # initial AMS impulse filter in the dictionary
         w0 = np.zeros((1,), dtype=DTYPE)
         opt['GradWeight'] = np.hstack((w0, opt['GradWeight']))
     else:
+        # If the GradWeight option is a scalar, set it to a constant array
+        # of the same value and then set the first entry to zero so that
+        # ℓ2 of gradient regularization is not applied to the initial AMS
+        # impulse filter in the dictionary
         opt['GradWeight'] = opt['GradWeight'] * np.ones((Di.shape[2],),
-                                                      dtype=DTYPE)
+                                                        dtype=DTYPE)
         opt['GradWeight'][..., 0] = 0.0
 
+    # Call main implementation for CBPDNGradReg problem. The use of
+    # np.rollaxis is required because the CUDA implementation assumes
+    # Matlab array layout.
     X = _cbpdngrd(np.ascontiguousarray(np.rollaxis(Di, 2, 0)),
                   np.ascontiguousarray(S),
                   np.ascontiguousarray(W, dtype=np.dtype("i")),
                   lmbda, mu, dict(opt), dev)
+
+    # Return the coefficient map array, slicing off the initial coefficient
+    # map corresponding to the AMS impulse filter
     return np.rollaxis(X, 0, 3)[..., 1:]
 
 
