@@ -219,8 +219,14 @@ class TestSet01(object):
         msk = su.rndmask(s.shape, frc, dtype=np.float32)
         s *= msk
         lmbda = 1e-1
+        # Create a random ℓ1 term weighting array. There is no need to
+        # extend this array to account for the AMS impulse filter since
+        # this is taken care of automatically by cucbpdn.cbpdnmsk
         Wl1 = np.random.randn(1, 1, M).astype(np.float32)
-        Wl1i = np.concatenate((Wl1, np.ones(Wl1.shape[0:-1] + (1,))),
+        # Append a zero entry to the L1Weight array, corresponding to
+        # the impulse filter appended to the dictionary by cbpdn.AddMaskSim,
+        # since this is not done automatically by cbpdn.AddMaskSim
+        Wl1i = np.concatenate((Wl1, np.zeros(Wl1.shape[0:-1] + (1,))),
                               axis=-1)
         opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
                                       'AutoRho': {'Enabled': False}})
@@ -245,6 +251,11 @@ class TestSet01(object):
         s *= msk
         lmbda = 1e-1
         mu = 1e-2
+        # Since cucbpdn.cbpdngrdmsk automatically ensures that the ℓ2 of
+        # gradient term is not applied to the AMS impulse filter, while
+        # cbpdn.AddMaskSim does not, we have to pass a GradWeight array
+        # with a zero entry corresponding to the AMS impulse filter to
+        # cbpdn.AddMaskSim
         Wgrdi = np.hstack((np.ones(M,), np.zeros((1,))))
         opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
                 'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
@@ -269,9 +280,20 @@ class TestSet01(object):
         s *= msk
         lmbda = 1e-1
         mu = 1e-2
+        # Create a random ℓ1 term weighting array. There is no need to
+        # extend this array to account for the AMS impulse filter since
+        # this is taken care of automatically by cucbpdn.cbpdngrdmsk
         Wl1 = np.random.randn(1, 1, M).astype(np.float32)
-        Wl1i = np.concatenate((Wl1, np.ones(Wl1.shape[0:-1] + (1,))),
+        # Append a zero entry to the L1Weight array, corresponding to
+        # the impulse filter appended to the dictionary by cbpdn.AddMaskSim,
+        # since this is not done automatically by cbpdn.AddMaskSim
+        Wl1i = np.concatenate((Wl1, np.zeros(Wl1.shape[0:-1] + (1,))),
                               axis=-1)
+        # Since cucbpdn.cbpdngrdmsk automatically ensures that the ℓ2 of
+        # gradient term is not applied to the AMS impulse filter, while
+        # cbpdn.AddMaskSim does not, we have to pass a GradWeight array
+        # with a zero entry corresponding to the AMS impulse filter to
+        # cbpdn.AddMaskSim
         Wgrdi = np.hstack((np.ones(M,), np.zeros((1,))))
         opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
                 'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
@@ -298,7 +320,13 @@ class TestSet01(object):
         s *= msk
         lmbda = 1e-1
         mu = 1e-2
+        # Create a random ℓ2 of gradient term weighting array. There is no
+        # need to extend this array to account for the AMS impulse filter
+        # since this is taken care of automatically by cucbpdn.cbpdngrdmsk
         Wgrd = np.random.randn(M).astype(np.float32)
+        # Append a zero entry to the GradWeight array, corresponding to
+        # the impulse filter appended to the dictionary by cbpdn.AddMaskSim,
+        # since this is not done automatically by cbpdn.AddMaskSim
         Wgrdi = np.hstack((Wgrd, np.zeros((1,))))
         opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
                 'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
