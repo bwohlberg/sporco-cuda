@@ -13,6 +13,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from builtins import filter
 import sys
 import os
 from ast import parse
