@@ -310,3 +310,9 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://sporco.rtfd.io/en/latest/': None}
+
+
+# Temporary fix for sphinx_tabs.tabs compatibility issue
+#   https://github.com/rtfd/readthedocs.org/issues/3715
+def setup(app):
+   app.add_stylesheet("https://media.readthedocs.org/css/sphinx_rtd_theme.css")
