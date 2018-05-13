@@ -1,3 +1,5 @@
+.. _installation-section:
+
 Installation
 ============
 
@@ -62,7 +64,7 @@ Requirements
 ------------
 
 The primary requirements are Python itself, `Cython <http://cython.org/>`_, the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_, and modules `future
-<http://python-future.org>`_, `numpy <http://www.numpy.org>`_, and `sporco <https://github.com/bwohlberg/sporco>`__
+<http://python-future.org>`_, `numpy <http://www.numpy.org>`_, and `sporco <https://github.com/bwohlberg/sporco>`__.
 
 
 Installation of these requirements is system dependent.

@@ -6,10 +6,12 @@ SPORCO-CUDA is an extension package to the `SPORCO <http://sporco.rtfd.io>`__ pa
 
 .. _usage-section:
 
-Usage Examples
---------------
+Using SPORCO-CUDA
+-----------------
 
-A collection of scripts illustrating usage of the package can be found in the ``examples`` directory of the source distribution. These examples can be run from the root directory of the package by, for example
+The recommended way of using SPORCO-CUDA is to install it as described in :ref:`installation-section`, and then access it via the `sporco.cuda <http://sporco.readthedocs.io/en/latest/sporco.cuda.html>`__ interface sub-package provided within the main `SPORCO <http://sporco.rtfd.io>`__ package.
+
+SPORCO-CUDA can also be used directly, via its own interface. A collection of scripts illustrating such usage can be found in the ``examples`` directory of the source distribution. These examples can be run from the root directory of the package by, for example
 
 ::
 

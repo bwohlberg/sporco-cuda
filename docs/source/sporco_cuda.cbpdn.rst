@@ -2,7 +2,7 @@ sporco_cuda.cbpdn module
 ========================
 
 
-.. py:function:: cbpdn(D, s, lmbda, opt, dev=0)
+.. np:function:: cbpdn(D, s, lmbda, opt, dev=0)
 
    A GPU-accelerated version of :class:`sporco.admm.cbpdn.ConvBPDN`.
 
@@ -27,7 +27,7 @@ sporco_cuda.cbpdn module
 
 
 
-.. py:function:: cbpdnmsk(D, s, w, lmbda, opt, dev=0)
+.. np:function:: cbpdnmsk(D, s, w, lmbda, opt, dev=0)
 
    A GPU-accelerated version of :class:`sporco.admm.cbpdn.AddMaskSim` used
    together with :class:`sporco.admm.cbpdn.ConvBPDN`, providing a spatial
@@ -67,7 +67,7 @@ sporco_cuda.cbpdn module
 
 
 
-.. py:function:: cbpdngrd(D, s, lmbda, mu, opt, dev=0)
+.. np:function:: cbpdngrd(D, s, lmbda, mu, opt, dev=0)
 
    A GPU-accelerated version of :class:`sporco.admm.cbpdn.ConvBPDNGradReg`.
 
@@ -94,7 +94,7 @@ sporco_cuda.cbpdn module
 
 
 
-.. py:function:: cbpdngrdmsk(D, s, w, lmbda, mu, opt, dev=0)
+.. np:function:: cbpdngrdmsk(D, s, w, lmbda, mu, opt, dev=0)
 
    A GPU-accelerated version of of :class:`sporco.admm.cbpdn.AddMaskSim`
    used together with :class:`sporco.admm.cbpdn.ConvBPDNGradReg`, providing
@@ -207,6 +207,7 @@ The algorithm options parameter may either be an appropriate ``sporco`` options 
     ``GradWeight`` : An array of weights :math:`w_m` for the term
     penalising the gradient of the coefficient maps (see the docs for
     :class:`sporco.admm.cbpdn.ConvBPDNGradReg.Options` for more detail).
-    **NB**: This option is only relevant to :func:`.cbpdngrd`.
+    **NB**: This option is only relevant to :func:`.cbpdngrd` and
+    :func:`.cbpdngrdmsk`.
 
 Entries in the ``sporco`` options objects that are not listed above are silently ignored.

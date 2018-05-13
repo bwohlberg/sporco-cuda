@@ -2,6 +2,7 @@ Modules
 =======
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   sporco_cuda
+   sporco_cuda.cbpdn
+   sporco_cuda.util
