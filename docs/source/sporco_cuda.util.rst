@@ -2,7 +2,7 @@ sporco_cuda.util module
 =======================
 
 
-.. py:function:: device_count()
+.. np:function:: device_count()
 
    Get the number of CUDA GPU devices installed on the host system.
 
@@ -12,7 +12,7 @@ sporco_cuda.util module
       Number of installed deviced
 
 
-.. py:function:: current_device(id=None)
+.. np:function:: current_device(id=None)
 
    Get or set the current CUDA GPU device. The current device is not set
    if `id` is None
@@ -28,7 +28,7 @@ sporco_cuda.util module
      Device number of current device
 
 
-.. py:function:: memory_info()
+.. np:function:: memory_info()
 
    Get memory information for the current CUDA GPU device.
 
@@ -40,7 +40,7 @@ sporco_cuda.util module
      Total memory in bytes
 
 
-.. py:function:: device_name(int dev=0)
+.. np:function:: device_name(int dev=0)
 
    Get hardware model name for the specified CUDA GPU device.
 
