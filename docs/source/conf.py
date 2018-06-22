@@ -13,8 +13,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from builtins import filter
 import sys
 import os
+from ast import parse
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -68,14 +70,10 @@ author = 'Gustavo Silva, Brendt Wohlberg'
 # built documents.
 #
 # The short X.Y version.
-base_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../..')
-with open(os.path.join(base_dir, 'sporco_cuda/__init__.py')) as f:
-    for line in f.readlines():
-        if line.startswith('__version__'):
-            version_info = {}
-            exec(line, None, version_info)
-            version = version_info['__version__']
-            break
+with open(os.path.join('../../sporco_cuda', '__init__.py')) as f:
+    version = parse(next(filter(
+        lambda line: line.startswith('__version__'),
+        f))).body[0].value.s
 # The full version, including alpha/beta/rc tags.
 release = version
 
