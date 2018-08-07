@@ -11,7 +11,7 @@
 // This method provides the solution for x (Output) to
 //     (a a^H + rho I) x = b
 // Where b = rho*fft2(Y-U) and inner products are taken along the 3rd dimension.
-// Only works for even image size and is faster than ypncuda_sherman kernel.
+// Only works for even image size and is faster than cuda_solvedbi_sm kernel.
 
 __global__ void cuda_solvedbi_sm_vec4(float2 *Out, float2 *ah, float2 *Dsf,
                                       float rho, float2 *YUf, float2 *c,
@@ -1172,7 +1172,7 @@ __global__ void cuda_Cal_Gfw(float *GfW, float2 *Grf, float2 *Gcf, int nRows,
 // This method provides the solution for x (Output) to
 //     (a a^H + rho I) x = b
 // Where b = rho*fft2(Y-U) and inner products are taken along the 3rd dimesion.
-// Only works for even image size and is faster than ypncuda_sherman kernel.
+// Only works for even image size and is faster than cuda_solvedbd_sm kernel.
 
 __global__ void cuda_solvedbd_sm_vec4(float2 *Out, float2 *ah, float2 *Dsf,
                                       float *GfW, float *GrdWeight, float rho,
