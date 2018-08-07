@@ -7,11 +7,11 @@ The `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_ is required for 
 
 
 The simplest way to install the most recent release of SPORCO-CUDA is from
-`PyPI <https://pypi.python.org/pypi/sporco-cuda/>`_ via ``pip``. The ``CUDAHOME`` environment variable must be set so that the build process can find the local CUDA toolkit installation. For example, under Linux with the CUDA toolkit installed at ``/usr/local/cuda-9.1``
+`PyPI <https://pypi.python.org/pypi/sporco-cuda/>`_ via ``pip``. The ``CUDAHOME`` environment variable must be set so that the build process can find the local CUDA toolkit installation. For example, under Linux with the CUDA toolkit installed at ``/usr/local/cuda-9.2``
 
 ::
 
-    CUDAHOME=/usr/local/cuda-9.1 pip install sporco-cuda
+    CUDAHOME=/usr/local/cuda-9.2 pip install sporco-cuda
 
 
 SPORCO-CUDA can also be manually installed from source, either from
@@ -27,12 +27,12 @@ To install the development version from `GitHub
 
     git clone https://github.com/bwohlberg/sporco-cuda.git
 
-followed by (again, assuming building under Linux with the CUDA toolkit installed at ``/usr/local/cuda-9.1``)
+followed by (again, assuming building under Linux with the CUDA toolkit installed at ``/usr/local/cuda-9.2``)
 
 ::
 
    cd sporco-cuda
-   export CUDAHOME=/usr/local/cuda-9.1
+   export CUDAHOME=/usr/local/cuda-9.2
    python setup.py build
    python setup.py test
    python setup.py install
@@ -41,7 +41,7 @@ Please report any test failures. The install command will usually have to be per
 
 ::
 
-   sudo -H CUDAHOME=/usr/local/cuda-9.1 pip install sporco-cuda
+   sudo -H CUDAHOME=/usr/local/cuda-9.2 pip install sporco-cuda
 
 or
 

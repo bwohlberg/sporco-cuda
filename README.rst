@@ -52,9 +52,9 @@ To run these scripts prior to installing the package, it is necessary to build i
 
   ::
 
-    export PATH=$PATH:/usr/local/cuda-9.1/bin
+    export PATH=$PATH:/usr/local/cuda-9.2/bin
 
-  where ``/usr/local/cuda-9.1/bin`` is the path for CUDA compiler ``nvcc``.
+  where ``/usr/local/cuda-9.2/bin`` is the path for CUDA compiler ``nvcc``.
 
 * Build the ``sporco-cuda`` package in place:
 
