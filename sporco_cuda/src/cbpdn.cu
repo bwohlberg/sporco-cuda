@@ -103,7 +103,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
   /******************************/
 
   float *d_S, *d_D, *d_Y, *d_X, *d_Xr, *d_U, *d_aux, *d_Yprv, *d_L1Weight;
-  int *d_Weight;
+  int *d_Weight = NULL;
 
   cufftComplex *d_auxf, *d_Df, *d_Dsf, *d_C, *d_Sf;
 
@@ -149,7 +149,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
 
   float *d_r, *d_ss, *d_nX, *d_nY, *d_nU;
   float nX, nY, nU, rhomlt, rsf;
-  float *d_JL1, *d_Jdf;
+  float *d_JL1 = NULL, *d_Jdf = NULL;
   float r = FLT_MAX;
   float s = FLT_MAX;
   float epri = 0;
@@ -590,7 +590,12 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
   checkCudaErrors(cudaFree(d_nY));
   checkCudaErrors(cudaFree(d_nU));
 
-  if (nWeight > 1)
-    checkCudaErrors(cudaFree(d_Weight));
   checkCudaErrors(cudaFree(d_L1Weight));
+
+  if (d_JL1 != NULL)
+    checkCudaErrors(cudaFree(d_JL1));
+  if (d_Jdf != NULL)
+    checkCudaErrors(cudaFree(d_Jdf));
+  if (d_Weight != NULL)
+    checkCudaErrors(cudaFree(d_Weight));
 }
