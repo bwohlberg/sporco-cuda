@@ -6,7 +6,8 @@ SPORCO-CUDA Release Notes
 Version 0.0.3   (not yet released)
 ----------------------------------
 
-
+- Fixed bug encountered when making multiple calls to cbpdnmsk or cbpdngrd
+- Added missing memory deallocation in cbpdn.cu and cbpdn_grd.cu
 
 
 Version 0.0.2   (2018-06-22)

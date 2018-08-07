@@ -117,6 +117,9 @@ def cbpdnmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
     d0[0, 0] = 1.0
     Di = np.dstack((d0, D))
 
+    # Store L1Weight option value
+    Wl1 = opt['L1Weight']
+
     # Check whether the L1Weight option is an array or a scalar
     if hasattr(opt['L1Weight'], 'ndim'):
         # If the L1Weight option is an array, prepend a zero array of the
@@ -140,6 +143,9 @@ def cbpdnmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
                np.ascontiguousarray(S),
                np.ascontiguousarray(W, dtype=np.dtype("i")),
                lmbda, dict(opt), dev)
+
+    # Restore L1Weight option value
+    opt['L1Weight'] = Wl1
 
     # Return the coefficient map array, slicing off the initial coefficient
     # map corresponding to the AMS impulse filter
@@ -232,6 +238,10 @@ def cbpdngrdmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
     d0[0, 0] = 1.0
     Di = np.dstack((d0, D))
 
+    # Store L1Weight and GradWeight option values
+    Wl1 = opt['L1Weight']
+    Wgr = opt['GradWeight']
+
     # Check whether the L1Weight option is an array or a scalar
     if hasattr(opt['L1Weight'], 'ndim'):
         # If the L1Weight option is an array, prepend a zero array of the
@@ -271,6 +281,10 @@ def cbpdngrdmsk(np.ndarray[DTYPE_t, ndim=3] D not None,
                   np.ascontiguousarray(S),
                   np.ascontiguousarray(W, dtype=np.dtype("i")),
                   lmbda, mu, dict(opt), dev)
+
+    # Restore L1Weight and GradWeight option values
+    opt['L1Weight'] = Wl1
+    opt['GradWeight'] = Wgr
 
     # Return the coefficient map array, slicing off the initial coefficient
     # map corresponding to the AMS impulse filter
