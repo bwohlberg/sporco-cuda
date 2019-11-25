@@ -1,7 +1,6 @@
 from __future__ import division
 from builtins import object
 
-import pytest
 import numpy as np
 
 from sporco.admm import cbpdn
@@ -26,7 +25,7 @@ class TestSet01(object):
         s = np.random.randn(Nr, Nc).astype(np.float32)
         lmbda = 1e-1
         opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
-                                 'AutoRho': {'Enabled': False}})
+                                      'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDN(D, s, lmbda, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
@@ -43,8 +42,9 @@ class TestSet01(object):
         s = np.random.randn(Nr, Nc).astype(np.float32)
         lmbda = 1e-1
         Wl1 = np.random.randn(1, 1, M).astype(np.float32)
-        opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
-                    'L1Weight': Wl1, 'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDN.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'L1Weight': Wl1,
+             'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDN(D, s, lmbda, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
@@ -62,8 +62,9 @@ class TestSet01(object):
         lmbda = 1e-1
         Wl1 = np.random.randn(1, 1, M).astype(np.float32)
         Wl1[0] = 0.0
-        opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
-                    'L1Weight': Wl1, 'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDN.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'L1Weight': Wl1,
+             'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDN(D, s, lmbda, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
@@ -80,8 +81,9 @@ class TestSet01(object):
         s = np.random.randn(Nr, Nc).astype(np.float32)
         lmbda = 1e-1
         Wl1 = np.random.randn(Nr, Nc, M).astype(np.float32)
-        opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
-                    'L1Weight': Wl1, 'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDN.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'L1Weight': Wl1,
+             'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDN(D, s, lmbda, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
@@ -98,8 +100,9 @@ class TestSet01(object):
         s = np.random.randn(Nr, Nc).astype(np.float32)
         lmbda = 1e-1
         mu = 1e-2
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'AutoRho':
+             {'Enabled': False}})
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
@@ -117,9 +120,9 @@ class TestSet01(object):
         lmbda = 1e-1
         mu = 1e-2
         Wgrd = np.random.randn(M).astype(np.float32)
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                        'MaxMainIter': 50, 'GradWeight': Wgrd,
-                        'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'GradWeight': Wgrd,
+             'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
@@ -137,9 +140,9 @@ class TestSet01(object):
         lmbda = 1e-1
         mu = 1e-2
         Wl1 = np.random.randn(1, 1, M).astype(np.float32)
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                'MaxMainIter': 50, 'L1Weight': Wl1,
-                'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'L1Weight': Wl1,
+             'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
@@ -157,9 +160,9 @@ class TestSet01(object):
         lmbda = 1e-1
         mu = 1e-2
         Wl1 = np.random.randn(Nr, Nc, M).astype(np.float32)
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                'MaxMainIter': 50, 'L1Weight': Wl1,
-                'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'L1Weight': Wl1,
+             'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
@@ -178,9 +181,9 @@ class TestSet01(object):
         mu = 1e-2
         Wl1 = np.random.randn(Nr, Nc, M).astype(np.float32)
         Wgrd = np.random.randn(M).astype(np.float32)
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                'MaxMainIter': 50, 'L1Weight': Wl1, 'GradWeight': Wgrd,
-                'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'L1Weight': Wl1,
+             'GradWeight': Wgrd, 'AutoRho': {'Enabled': False}})
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
@@ -257,8 +260,9 @@ class TestSet01(object):
         # with a zero entry corresponding to the AMS impulse filter to
         # cbpdn.AddMaskSim
         Wgrdi = np.hstack((np.ones(M,), np.zeros((1,))))
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'AutoRho':
+             {'Enabled': False}})
         opt['GradWeight'] = Wgrdi
         b = cbpdn.AddMaskSim(cbpdn.ConvBPDNGradReg, D, s, msk, lmbda, mu, opt)
         X1 = b.solve()
@@ -295,8 +299,9 @@ class TestSet01(object):
         # with a zero entry corresponding to the AMS impulse filter to
         # cbpdn.AddMaskSim
         Wgrdi = np.hstack((np.ones(M,), np.zeros((1,))))
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'AutoRho':
+             {'Enabled': False}})
         opt['L1Weight'] = Wl1i
         opt['GradWeight'] = Wgrdi
         b = cbpdn.AddMaskSim(cbpdn.ConvBPDNGradReg, D, s, msk, lmbda, mu, opt)
@@ -328,8 +333,9 @@ class TestSet01(object):
         # the impulse filter appended to the dictionary by cbpdn.AddMaskSim,
         # since this is not done automatically by cbpdn.AddMaskSim
         Wgrdi = np.hstack((Wgrd, np.zeros((1,))))
-        opt = cbpdn.ConvBPDNGradReg.Options({'Verbose': False,
-                'MaxMainIter': 50, 'AutoRho': {'Enabled': False}})
+        opt = cbpdn.ConvBPDNGradReg.Options(
+            {'Verbose': False, 'MaxMainIter': 50, 'AutoRho':
+             {'Enabled': False}})
         opt['GradWeight'] = Wgrdi
         b = cbpdn.AddMaskSim(cbpdn.ConvBPDNGradReg, D, s, msk, lmbda, mu, opt)
         X1 = b.solve()

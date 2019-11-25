@@ -1,9 +1,6 @@
 from __future__ import division
 from builtins import object
 
-import pytest
-import numpy as np
-
 import sporco_cuda.util as cu
 
 
