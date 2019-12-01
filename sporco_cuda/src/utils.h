@@ -18,6 +18,7 @@ extern "C" {
 void default_opts(void *data);
 void clear_opts(void *data);
 int check_cuda_req(int device);
+void save_data_txt(float * data, int size, char* name);
 
 #ifdef __cplusplus
 } // end extern "C"

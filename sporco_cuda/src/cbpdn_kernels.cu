@@ -1,7 +1,6 @@
 //  Author: Gustavo Silva <gustavo.silva@pucp.edu.pe>
 
 #include <cuComplex.h>
-
 #include "common.h"
 
 /*****************************/
@@ -24,7 +23,7 @@ __global__ void cuda_solvedbi_sm_vec4(float2 *Out, float2 *ah, float2 *Dsf,
 
   cb = make_float4(0, 0, 0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
 
     for (k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + half_nRows * k) * nCols;
@@ -76,7 +75,7 @@ __global__ void cuda_solvedbi_sm(float2 *Out, float2 *ah, float2 *Dsf,
 
   cb = make_cuFloatComplex(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     for (k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + nRows * k) * nCols;
@@ -254,7 +253,7 @@ __global__ void cuda_Shrink_CalU_vec4_Vector(float *Y, float *U, float *X,
   float WLambda;
   float4 absxV4, X_temp, U_temp, Y_temp;
 
-  if ((Tidx < nCols) & (Tidy < Part_nRows)) {
+  if ((Tidx < nCols) && (Tidy < Part_nRows)) {
 
     for (int k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + Part_nRows * k) * nCols;
@@ -290,7 +289,7 @@ __global__ void cuda_Shrink_CalU_Vector(float *Y, float *U, float *X,
   float WLambda;
   float absxV1, X_temp, U_temp, Y_temp;
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     for (int k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + nRows * k) * nCols;
@@ -468,7 +467,7 @@ __global__ void cuda_Cal_Dsf_C_vec4(float2 *Dsf, float2 *C, float2 *Sf,
 
   sum_Df = make_float4(0, 0, 0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
     index = Tidx + Tidy * nCols;
     b = reinterpret_cast<float4 *>(Sf)[index];
 
@@ -504,7 +503,7 @@ __global__ void cuda_Cal_Dsf_C(float2 *Dsf, float2 *C, float2 *Sf, float2 *Df,
 
   sum_Df = make_cuFloatComplex(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
     index = Tidx + Tidy * nCols;
     b = Sf[index];
 
@@ -542,7 +541,7 @@ __global__ void cuda_Cal_C_vec4(float2 *C, float2 *Df, float rho, int nRows,
 
   sum_Df = make_float4(0, 0, 0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
 
     for (k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + half_nRows * k) * nCols;
@@ -575,7 +574,7 @@ __global__ void cuda_Cal_C(float2 *C, float2 *Df, float rho, int nRows,
 
   sum_Df = make_cuFloatComplex(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     for (k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + nRows * k) * nCols;
@@ -600,18 +599,18 @@ __global__ void cuda_Cal_C(float2 *C, float2 *Df, float rho, int nRows,
 // Sets padded Dictionary in order to get the same size of nCols and nRows
 // input image (required size for FFT point wise multiplication)
 
-__global__ void cuda_Pad_Dict(float *PadD, float *D, int nCols_D, int nRows_D,
+__global__ void cuda_Pad_Dict(float *PadD, float *D, int nRows_D, int nCols_D,
                               int nFilts, int nRows, int nCols) {
   unsigned int Tidx_D = threadIdx.x + blockIdx.x * blockDim.x;
   unsigned int Tidy_D = threadIdx.y + blockIdx.y * blockDim.y;
-  unsigned int Tidy_PadD = threadIdx.y + blockIdx.y * blockDim.y;
 
   int Dim_D = nRows_D * nFilts;
+  int i,j;
 
-  if ((Tidx_D < nCols_D) & (Tidy_D < nRows_D)) {
+  if ((Tidx_D < nCols_D) && (Tidy_D < nRows_D)) {
 
-    for (; Tidy_D < Dim_D; Tidy_D += nRows_D, Tidy_PadD += nRows)
-      PadD[Tidx_D + Tidy_PadD * nCols] = D[Tidx_D + Tidy_D * nCols_D];
+    for ( i = Tidy_D, j = Tidy_D ; i < Dim_D; i += nRows_D, j += nRows)
+      PadD[Tidx_D + j * nCols] = D[Tidx_D + i * nCols_D];
   }
 }
 
@@ -757,11 +756,19 @@ __global__ void cuda_Cal_residuals_norms_vec4(float *s, float *r, float *nX,
   }
 
   sumX = blockReduceSum(sumX);
+  __syncthreads();
+
   sumY = blockReduceSum(sumY);
+  __syncthreads();
+
   sumU = blockReduceSum(sumU);
+  __syncthreads();
 
   sumXY = blockReduceSum(sumXY);
+  __syncthreads();
+
   sumYY = blockReduceSum(sumYY);
+  __syncthreads();
 
   if (threadIdx.x == 0) {
     // sumX, sumY, sumU, sumXY and sumYY are multiplied by 1e+6 to
@@ -823,8 +830,13 @@ __global__ void cuda_norm_vec4(float *nX, float *nY, float *nU, float *X,
   }
 
   sumX = blockReduceSum(sumX);
+  __syncthreads();
+
   sumY = blockReduceSum(sumY);
+  __syncthreads();
+
   sumU = blockReduceSum(sumU);
+  __syncthreads();
 
   if (threadIdx.x == 0) {
     // sumX, sumY and sumU are multiplied by 1e+6 to avoid calculation error
@@ -882,7 +894,10 @@ __global__ void cuda_Cal_residuals_vec4(float *s, float *r, float *X, float *Y,
   }
 
   sumXY = blockReduceSum(sumXY);
+  __syncthreads();
+
   sumYY = blockReduceSum(sumYY);
+  __syncthreads();
 
   if (threadIdx.x == 0) {
     // sumXY and sumYY are multiplied by 1e+6 to avoid calculation error
@@ -909,7 +924,7 @@ __global__ void cuda_Fidelity_Term_vec4(float *Jdf, float2 *Df, float2 *Xf,
 
   sum_Df = make_float4(0, 0, 0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
 
     for (k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + half_nRows * k) * nCols;
@@ -926,6 +941,7 @@ __global__ void cuda_Fidelity_Term_vec4(float *Jdf, float2 *Df, float2 *Xf,
   }
 
   sum = blockReduceSum(sum);
+  __syncthreads();
 
   if (threadIdx.x == 0)
     atomicAdd(Jdf, sum);
@@ -945,7 +961,7 @@ __global__ void cuda_Fidelity_Term(float *Jdf, float2 *Df, float2 *Xf,
 
   sum_Df = make_cuFloatComplex(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     for (k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + nRows * k) * nCols;
@@ -960,6 +976,7 @@ __global__ void cuda_Fidelity_Term(float *Jdf, float2 *Df, float2 *Xf,
   }
 
   sum = blockReduceSum(sum);
+  __syncthreads();
 
   if (threadIdx.x == 0)
     atomicAdd(Jdf, sum);
@@ -1000,6 +1017,7 @@ __global__ void cuda_L1_Term_vec4(float *d_JL1, float *X, float L1Weight,
 
   sum = blockReduceSum(sum);
   sum *= abs(L1Weight);
+  __syncthreads();
 
   if (threadIdx.x == 0)
     atomicAdd(d_JL1, sum);
@@ -1050,6 +1068,7 @@ __global__ void cuda_L1_Term_vec4_Scalar_Array(float *d_JL1, float *X,
   }
 
   sum = blockReduceSum(sum);
+  __syncthreads();
 
   if (threadIdx.x == 0)
     atomicAdd(d_JL1, sum);
@@ -1066,7 +1085,7 @@ __global__ void cuda_L1_Term_vec4_Vector(float *d_JL1, float *X,
   float WLambda, sum = 0.0;
   float4 X_temp;
 
-  if ((Tidx < nCols) & (Tidy < Part_nRows)) {
+  if ((Tidx < nCols) && (Tidy < Part_nRows)) {
 
     for (int k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + Part_nRows * k) * nCols;
@@ -1082,6 +1101,7 @@ __global__ void cuda_L1_Term_vec4_Vector(float *d_JL1, float *X,
   }
 
   sum = blockReduceSum(sum);
+  __syncthreads();
 
   if (threadIdx.x == 0)
     atomicAdd(d_JL1, sum);
@@ -1095,7 +1115,7 @@ __global__ void cuda_L1_Term_Vector(float *d_JL1, float *X, float *L1Weight,
 
   float X_temp, WLambda, sum = 0.0;
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     for (int k = 0; k < nFilts; k += 1) {
       index = Tidx + (Tidy + nRows * k) * nCols;
@@ -1108,6 +1128,7 @@ __global__ void cuda_L1_Term_Vector(float *d_JL1, float *X, float *L1Weight,
   }
 
   sum = blockReduceSum(sum);
+  __syncthreads();
 
   if (threadIdx.x == 0)
     atomicAdd(d_JL1, sum);
@@ -1120,7 +1141,7 @@ __global__ void cuda_Cal_X_minus_U_W(float *Y, float *U, float *X, int *Weight,
 
   float X_temp, U_temp, Y_temp;
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
     index = Tidx + Tidy * nCols;
 
     X_temp = (X[index] / (nRows * nCols));
@@ -1152,7 +1173,7 @@ __global__ void cuda_Cal_Gfw(float *GfW, float2 *Grf, float2 *Gcf, int nRows,
   float GfW_temp;
   float2 Grf_temp, Gcf_temp;
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     index = Tidx + Tidy * nCols;
 
@@ -1189,7 +1210,7 @@ __global__ void cuda_solvedbd_sm_vec4(float2 *Out, float2 *ah, float2 *Dsf,
 
   cb = make_float4(0, 0, 0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
 
     index = Tidx + Tidy * nCols;
     GfW_temp = reinterpret_cast<float2 *>(GfW)[index];
@@ -1260,7 +1281,7 @@ __global__ void cuda_solvedbd_sm(float2 *Out, float2 *ah, float2 *Dsf,
 
   cb = make_cuFloatComplex(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     index = Tidx + Tidy * nCols;
     GfW_temp = mu * GfW[index];
@@ -1336,7 +1357,7 @@ __global__ void cuda_Fidelity_Gr_Term_vec4(float *Jdf, float *Jgr, float2 *Df,
 
   sum_Df = make_float4(0, 0, 0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
     index = Tidx + Tidy * nCols;
     GfW_temp = reinterpret_cast<float2 *>(GfW)[index];
     Weight = GrdWeight[0];
@@ -1365,7 +1386,10 @@ __global__ void cuda_Fidelity_Gr_Term_vec4(float *Jdf, float *Jgr, float2 *Df,
   }
 
   sum = blockReduceSum(sum);
+  __syncthreads();
+
   sum_Gr = blockReduceSum(sum_Gr);
+  __syncthreads();
 
   if (threadIdx.x == 0) {
     atomicAdd(Jdf, sum);
@@ -1388,7 +1412,7 @@ __global__ void cuda_Fidelity_Gr_Term(float *Jdf, float *Jgr, float2 *Df,
 
   sum_Df = make_cuFloatComplex(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     index = Tidx + Tidy * nCols;
     GfW_temp = GfW[index];
@@ -1415,7 +1439,10 @@ __global__ void cuda_Fidelity_Gr_Term(float *Jdf, float *Jgr, float2 *Df,
   }
 
   sum = blockReduceSum(sum);
+  __syncthreads();
+
   sum_Gr = blockReduceSum(sum_Gr);
+  __syncthreads();
 
   if (threadIdx.x == 0) {
     atomicAdd(Jdf, sum);
@@ -1444,7 +1471,7 @@ __global__ void cuda_Cal_Dsf_grd_C_vec4(float2 *Dsf, float2 *C, float2 *Sf,
 
   sum_Df = make_float2(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
     index = Tidx + Tidy * nCols;
     b = reinterpret_cast<float4 *>(Sf)[index];
     GfW_temp = reinterpret_cast<float2 *>(GfW)[index];
@@ -1500,7 +1527,7 @@ __global__ void cuda_Cal_Dsf_grd_C(float2 *Dsf, float2 *C, float2 *Sf,
   float2 a, ah, b;
   float Weight, GfW_temp, aux, sum_Df = 0;
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
     index = Tidx + Tidy * nCols;
     b = Sf[index];
     GfW_temp = mu * GfW[index];
@@ -1554,7 +1581,7 @@ __global__ void cuda_Cal_grd_C_vec4(float2 *C, float2 *Df, float *GfW,
 
   sum_Df = make_float2(0, 0);
 
-  if ((Tidx < nCols) & (Tidy < half_nRows)) {
+  if ((Tidx < nCols) && (Tidy < half_nRows)) {
 
     index = Tidx + Tidy * nCols;
     GfW_temp = reinterpret_cast<float2 *>(GfW)[index];
@@ -1606,7 +1633,7 @@ __global__ void cuda_Cal_grd_C(float2 *C, float2 *Df, float *GfW,
   float Weight, GfW_temp, aux, sum_Df = 0;
   float2 ah;
 
-  if ((Tidx < nCols) & (Tidy < nRows)) {
+  if ((Tidx < nCols) && (Tidy < nRows)) {
 
     index = Tidx + Tidy * nCols;
     GfW_temp = mu * GfW[index];

@@ -45,7 +45,7 @@ __global__ void cuda_Cal_C_vec4(float2 *C, float2 *Df, float rho, int nRows,
 __global__ void cuda_Cal_C(float2 *C, float2 *Df, float rho, int nRows,
                            int nCols, int nFilts);
 
-__global__ void cuda_Pad_Dict(float *PadD, float *D, int nCols_D, int nRows_D,
+__global__ void cuda_Pad_Dict(float *PadD, float *D, int nRows_D, int nCols_D,
                               int nFilts, int nRows, int nCols);
 
 __global__ void cuda_CalYU_vec4(float *YU, float *Y, float *U, int nRows,

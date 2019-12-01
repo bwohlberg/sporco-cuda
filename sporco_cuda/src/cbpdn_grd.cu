@@ -1,3 +1,5 @@
+//  Author: Gustavo Silva <gustavo.silva@pucp.edu.pe>
+
 /************************************************************/
 /**** CBPDNGR - CBPDN with Gradient Regularization     ******/
 /************************************************************/
@@ -70,8 +72,6 @@
                       using the auxiliary (split) variable
      HighMemSolve     Use more memory for a slightly faster solution
 
-
-  Author: Gustavo Silva <gustavo.silva@pucp.edu.pe>
 */
 
 // stdlib includes
@@ -87,6 +87,7 @@
 // local includes
 #include "algopt.h" // Contains the parameters structure
 #include "common.h"
+#include "error_check.cuh"
 #include "utils.h"
 // extern "C" {
 #include "cbpdn_grd.h"
@@ -543,8 +544,8 @@ void cuda_wrapper_CBPDN_GR(float *D, float *S, float lambda, float mu,
 
       checkCudaErrors(cudaDeviceSynchronize());
 
-      float Jdf = d_Jdf[0] / (IMG_ROW_SIZE * IMG_COL_SIZE);
-      float Jgr = d_Jgr[0] / (IMG_ROW_SIZE * IMG_COL_SIZE);
+      float Jdf = d_Jdf[0] / (2 * IMG_ROW_SIZE * LIMIT_X);
+      float Jgr = d_Jgr[0] / (2 * IMG_ROW_SIZE * LIMIT_X);
       float Jl1 = d_JL1[0];
       float Jfn = Jdf + lambda * Jl1 + mu * Jgr;
 

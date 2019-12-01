@@ -2,6 +2,7 @@
 
 #include "algopt.h"
 #include "common.h"
+#include "error_check.cuh"
 #include "utils.h"
 
 #ifdef __cplusplus
@@ -143,6 +144,7 @@ int check_cuda_req(int device) {
 }
 
 int get_device_count(void) {
+
   int devCount;
   cudaError_t cuError;
 
@@ -170,6 +172,25 @@ char *get_device_name(int dev) {
     return cdp.name;
   else
     return NULL;
+}
+
+
+
+
+void save_data_txt(float * data, int size, char * name){
+
+  FILE *fp;
+
+  char output[50];
+  sprintf(output, "%s.txt", name);
+
+  fp=fopen(output,"w");
+
+  for(int n=0;n<size;n++){
+      fprintf(fp,"%9.4e\n",data[n]);}
+
+  fclose(fp);
+
 }
 
 #ifdef __cplusplus

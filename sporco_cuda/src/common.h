@@ -2,25 +2,7 @@
 
 #include <stdio.h>
 
-/* *********************************** */
-/* *********************************** */
-/*          CUDA error checking        */
-/* *********************************** */
-/* *********************************** */
 
-#define checkCudaErrors(val)                                                   \
-  __checkCudaErrors__((val), #val, __FILE__, __LINE__)
-
-template <typename T>
-inline void __checkCudaErrors__(T code, const char *func, const char *file,
-                                int line) {
-  if (code) {
-    fprintf(stderr, " \n CUDA error at %s:%d code=%d \"%s\" \n", file, line,
-            (unsigned int)code, func);
-    cudaDeviceReset();
-    exit(EXIT_FAILURE);
-  }
-}
 
 /* *********************************** */
 /* *********************************** */
@@ -129,7 +111,7 @@ __device__ inline float sum_sqrt_cuCabsf_vec4(float4 a) {
 __forceinline__ __device__ float warpReduceSum(float val, int Size) {
 
   for (unsigned int offset = Size; offset > 0; offset /= 2)
-    val += __shfl_down(val, offset);
+    val += __shfl_down_sync(0xffffffff, val, offset);
 
   return val;
 }
@@ -142,8 +124,7 @@ __inline__ __device__ float blockReduceSum(float val) {
   int lane = (threadIdx.x + threadIdx.y * blockDim.x) % warpSize;
   int wid = (threadIdx.x + threadIdx.y * blockDim.x) / warpSize;
 
-  val =
-      warpReduceSum(val, warpSize / 2); // Each warp performs partial reduction
+  val = warpReduceSum(val, warpSize / 2); // Each warp performs partial reduction
 
   if (lane == 0)
     shared[wid] = val; // Write reduced value to shared memory

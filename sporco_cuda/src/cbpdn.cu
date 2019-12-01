@@ -1,3 +1,5 @@
+//  Author: Gustavo Silva <gustavo.silva@pucp.edu.pe>
+
 /*******************************************************************/
 /****       CBPDN - Convolutional Basis Pursuit DeNoising       ****/
 /*******************************************************************/
@@ -58,9 +60,6 @@
                       using the auxiliary (split) variable
      HighMemSolve     Use more memory for a slightly faster solution
 
-
-  Author: Gustavo Silva <gustavo.silva@pucp.edu.pe>
-
 */
 
 // stdlib includes
@@ -76,6 +75,7 @@
 // local includes
 #include "algopt.h" // Contains the parameters structure
 #include "common.h"
+#include "error_check.cuh"
 #include "utils.h"
 // extern "C" {
 #include "cbpdn.h"
@@ -86,6 +86,7 @@
 void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
                         float *Y) {
   AlgOpt *opt = ((AlgOpt *)vopt);
+
 
   // Checks and sets default options
   default_opts(opt);
@@ -258,26 +259,30 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
                                cudaMemcpyHostToDevice));
   }
 
+ // Share the same memory space in order to reduce expenses
+  d_Xr = d_aux;
+
+ //set data with zeros
+  checkCudaErrors(cudaMemset(d_aux, 0, SIZE_X * sizeof(float)));
+  checkCudaErrors(cudaMemset(d_Yprv, 0, SIZE_X * sizeof(float)));
+
   checkCudaErrors(cudaDeviceSynchronize());
+
 
   /****************************************/
   /****   Calculates Fixed Variables   ****/
   /****************************************/
-
-  // Share the same memory space in order to reduce expenses
-  d_Xr = d_aux;
-
-  checkCudaErrors(cudaMemset(d_aux, 0, SIZE_X * sizeof(float)));
-  checkCudaErrors(cudaMemset(d_Yprv, 0, SIZE_X * sizeof(float)));
 
   // Sets padded dictionary
   cuda_Pad_Dict<<<blocksPerGrid_Padding, threadsPerBlock>>>(
       d_aux, d_D, DICT_ROW_SIZE, DICT_COL_SIZE, DICT_M_SIZE, IMG_ROW_SIZE,
       IMG_COL_SIZE);
 
+
   // Calculates "Sf'" = FFT2(S)
   checkCudaErrors(cufftExecR2C(planfft_forward_many_Sf, ((cufftReal *)d_S),
                                ((cufftComplex *)d_Sf)));
+
 
   // Calculates '"Df" = FFT2(D_padded)
   checkCudaErrors(cufftExecR2C(planfft_forward_many, ((cufftReal *)d_aux),
@@ -293,6 +298,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
   }
 
   checkCudaErrors(cudaDeviceSynchronize());
+
 
   d_nX[0] = 0.0;
   d_nY[0] = 0.0;
@@ -317,6 +323,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
       checkCudaErrors(cudaMemset(d_auxf, 0, SIZE_Xf * sizeof(float2)));
       checkCudaErrors(cudaMemset(d_U, 0, SIZE_X * sizeof(float)));
       checkCudaErrors(cudaMemset(d_Y, 0, SIZE_X * sizeof(float)));
+      checkCudaErrors(cudaDeviceSynchronize());
     } else {
       // Calculates Y-U
       cuda_CalYU_vec4<<<blocksPerGrid, threadsPerBlock>>>(
@@ -337,6 +344,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
           d_auxf, d_Df, d_Dsf, rho, d_auxf, d_C, IMG_ROW_SIZE, LIMIT_X,
           DICT_M_SIZE);
     }
+
 
     // Calculates  X = IFFT(Xf)
     checkCudaErrors(cufftExecC2R(planfft_reverse_many, ((cufftComplex *)d_auxf),
@@ -380,10 +388,13 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
           DICT_M_SIZE - W_flag);
     }
 
+
     if (W_flag == 1) {
       cuda_Cal_X_minus_U_W<<<blocksPerGrid, threadsPerBlock>>>(
           d_Y, d_U, d_Xr, d_Weight, IMG_ROW_SIZE, IMG_COL_SIZE);
     }
+
+
 
     // compute distances between X and Y,  Y and Yprv
     // See pp. 19-20 of boyd-2010-distributed
@@ -435,7 +446,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
       d_JL1[0] = 0.0;
       d_Jdf[0] = 0.0;
 
-      // Compute data fidelity term in Fourier domain (note normalisation)
+      // Compute data fidelity term in Fourier domain (note normalization)
       if (opt->AuxVarObj == 1) {
         // Calculates FFT2(Y)
         checkCudaErrors(cufftExecR2C(planfft_forward_many, ((cufftReal *)d_Y),
@@ -448,6 +459,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
           cuda_Fidelity_Term_vec4<<<blocksPerGrid_radix2_fft,
                                     threadsPerBlock>>>(
               d_Jdf, d_Df, d_auxf, d_Sf, IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE);
+
 
         if (nL1Weight == DICT_M_SIZE) {
           if ((IMG_ROW_SIZE % 4) == 0) {
@@ -474,6 +486,7 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
           cuda_Fidelity_Term_vec4<<<blocksPerGrid_radix2_fft,
                                     threadsPerBlock>>>(
               d_Jdf, d_Df, d_auxf, d_Sf, IMG_ROW_SIZE, LIMIT_X, DICT_M_SIZE);
+
 
         if (nL1Weight == DICT_M_SIZE) {
           if ((IMG_ROW_SIZE % 4) == 0) {
@@ -560,6 +573,8 @@ void cuda_wrapper_CBPDN(float *D, float *S, float lambda, void *vopt,
   checkCudaErrors(cudaDeviceSynchronize());
 
   memcpy(Y, d_Y, (int)SIZE_X * sizeof(float));
+
+
 
   /****************************/
   /****   Release Memory   ****/
