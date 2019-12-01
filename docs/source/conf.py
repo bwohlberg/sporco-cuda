@@ -156,7 +156,7 @@ html_theme = "haiku"
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'sporco.css'
+# html_style = 'sporco.css'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -311,3 +311,9 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://sporco.rtfd.io/en/latest/': None}
+
+
+def setup(app):
+
+    app.add_stylesheet("sporco.css")
+    app.add_stylesheet("http://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css")
