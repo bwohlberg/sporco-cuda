@@ -25,15 +25,15 @@ To run these scripts prior to installing the package, it is necessary to build i
 
   ::
 
-    export PATH=$PATH:/usr/local/cuda-9.2/bin
+    export PATH=$PATH:/usr/local/cuda-10.1/bin
 
-  where ``/usr/local/cuda-9.0/bin`` is the path for ``nvcc``, or set the ``CUDAHOME`` environment variable to the root of the CUDA installation, e.g.
+  where ``/usr/local/cuda-10.1/bin`` is the path for ``nvcc``, or set the ``CUDAHOME`` environment variable to the root of the CUDA installation, e.g.
 
   ::
 
-    export CUDAHOME=/usr/local/cuda-9.2
+    export CUDAHOME=/usr/local/cuda-10.1
 
-  where ``/usr/local/cuda-9.2`` is the root of the CUDA installation.
+  where ``/usr/local/cuda-10.1`` is the root of the CUDA installation.
 
 * Build the ``sporco-cuda`` package in place:
 
