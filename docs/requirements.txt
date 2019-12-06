@@ -1,6 +1,6 @@
 future
 numpy
-sphinx>=1.2.2
+sphinx>=2.2
 numpydoc
 sphinx_tabs
 sphinx_fontawesome
