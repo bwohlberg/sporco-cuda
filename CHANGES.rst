@@ -3,8 +3,8 @@ SPORCO-CUDA Release Notes
 =========================
 
 
-Version 0.0.4   (not yet released)
-----------------------------------
+Version 0.0.4   (2019-12-06)
+----------------------------
 
 • Fixed a number of bugs, including kernels not running on some GPU
   architectures (e.g. GTX Titan X)
