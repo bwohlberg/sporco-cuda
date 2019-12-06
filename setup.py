@@ -15,6 +15,7 @@ from distutils.extension import Extension
 from distutils.command.clean import clean
 from Cython.Distutils import build_ext
 import subprocess
+import re
 import numpy
 
 
@@ -64,6 +65,21 @@ def locate_cuda():
                                    'located in %s' % (k, v))
 
     return cudaconfig
+
+
+
+def get_cuda_version(cucnf):
+    """Get the installed CUDA version from nvcc"""
+
+    try:
+        nvcc = cucnf['nvcc']
+        verstr = subprocess.check_output([nvcc, '-V']).decode("utf-8")
+        m = re.search('release (\d+\.\d+)', verstr)
+        ver = m.group(1)
+    except:
+        ver = None
+
+    return ver
 
 
 
@@ -125,8 +141,6 @@ class custom_clean(clean):
 
 
 
-CUDA = locate_cuda()
-
 # Obtain the numpy include directory. This logic works across numpy versions.
 try:
     numpy_include = numpy.get_include()
@@ -135,24 +149,53 @@ except AttributeError:
 
 
 
+CUDA = locate_cuda()
+cuver = get_cuda_version(CUDA)
+# Default CUDA version if version number cannot be extracted from nvcc
+if cuver is None:
+    cuver = '8.0'
+
+cc3 = [
+    '-gencode', 'arch=compute_30,code=sm_30',
+    '-gencode', 'arch=compute_32,code=sm_32',
+    '-gencode', 'arch=compute_35,code=sm_35',
+    '-gencode', 'arch=compute_37,code=sm_37'
+    ]
+cc5 = [
+    '-gencode', 'arch=compute_50,code=sm_50',
+    '-gencode', 'arch=compute_52,code=sm_52',
+    '-gencode', 'arch=compute_53,code=sm_53'
+    ]
+cc6 = [
+    '-gencode', 'arch=compute_60,code=sm_60',
+    '-gencode', 'arch=compute_61,code=sm_61',
+    '-gencode', 'arch=compute_62,code=sm_62'
+    ]
+
+if cuver == '8.0':
+    archflg = cc3 + cc5 + cc6
+elif cuver == '9.0' or cuver == '9.1' or cuver == '9.2':
+    archflg = cc3 + cc5 + cc6 + [
+        '-gencode', 'arch=compute_70,code=sm_70',
+        '-gencode', 'arch=compute_72,code=sm_72',
+    ]
+elif cuver == '10.0' or cuver == '10.1' or cuver == '10.2':
+    archflg = cc3 + cc5 + cc6 + [
+        '-gencode', 'arch=compute_70,code=sm_70',
+        '-gencode', 'arch=compute_72,code=sm_72',
+        '-gencode', 'arch=compute_75,code=sm_75'
+    ]
+else:
+    archflg = cc3 + cc5
+
+
 gcc_flags = ['-shared', '-O2', '-fno-strict-aliasing']
 nvcc_flags = [
     '-Xcompiler', "'-D__builtin_stdarg_start=__builtin_va_start'",
     '--compiler-options', "'-fno-inline'",
     '--compiler-options', "'-fno-strict-aliasing'",
-    '--compiler-options', "'-Wall'",
-    '-gencode', 'arch=compute_30,code=sm_30',
-    '-gencode', 'arch=compute_32,code=sm_32',
-    '-gencode', 'arch=compute_35,code=sm_35',
-    '-gencode', 'arch=compute_37,code=sm_37',
-    '-gencode', 'arch=compute_50,code=sm_50',
-    '-gencode', 'arch=compute_52,code=sm_52',
-    '-gencode', 'arch=compute_53,code=sm_53',
-    '-gencode', 'arch=compute_60,code=sm_60',
-    '-gencode', 'arch=compute_61,code=sm_61',
-    '-gencode', 'arch=compute_62,code=sm_62',
-    '-gencode', 'arch=compute_70,code=sm_70',
-    '-gencode', 'arch=compute_72,code=sm_72',
+    '--compiler-options', "'-Wall'"
+    ] + archflg + [
     '-Xcompiler', "'-fPIC'"
     ]
 
@@ -193,7 +236,7 @@ ext_cbpdn = Extension('sporco_cuda.cbpdn',
 name = 'sporco-cuda'
 pname = 'sporco_cuda'
 
-# Get version number from sporco/__init__.py
+# Get version number from sporco_cuda/__init__.py
 # See http://stackoverflow.com/questions/2058802
 with open(os.path.join(pname, '__init__.py')) as f:
     version = parse(next(filter(
