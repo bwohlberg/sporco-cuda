@@ -6,6 +6,7 @@ SPORCO-CUDA Release Notes
 Version 0.0.5   (not yet released)
 ----------------------------------
 
+• Fixed omission of a source file from MANIFEST.in
 
 
 Version 0.0.4   (2019-12-06)

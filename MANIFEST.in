@@ -15,6 +15,7 @@ recursive-include docs *.py *.rst *.css
 include sporco_cuda/__init__.py
 include sporco_cuda/src/*.h
 include sporco_cuda/src/*.cu
+include sporco_cuda/src/*.cuh
 include sporco_cuda/tests/*.py
 
 prune docs/build
