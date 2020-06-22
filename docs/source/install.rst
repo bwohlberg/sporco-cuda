@@ -92,7 +92,7 @@ Installation of these requirements is system dependent.
 
       Some additional dependencies are required for building the
       documentation from the package source, for which Python 3.3 or
-      later is required. For example, under Ubuntu Linux 16.04, the
+      later is required. For example, under Ubuntu Linux 18.04, the
       following commands should be sufficient
 
       ::
