@@ -315,5 +315,6 @@ intersphinx_mapping = {'https://docs.python.org/': None,
 
 def setup(app):
 
-    app.add_stylesheet("sporco.css")
-    app.add_stylesheet("http://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css")
+    app.add_css_file('sporco.css')
+    app.add_css_file('http://netdna.bootstrapcdn.com/font-awesome/4.7.0/'
+                     'css/font-awesome.min.css')
