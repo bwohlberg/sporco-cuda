@@ -153,40 +153,37 @@ CUDA = locate_cuda()
 cuver = get_cuda_version(CUDA)
 # Default CUDA version if version number cannot be extracted from nvcc
 if cuver is None:
-    cuver = '8.0'
+    cuver = '10.0'
 
-cc3 = [
+cc = [
     '-gencode', 'arch=compute_30,code=sm_30',
     '-gencode', 'arch=compute_32,code=sm_32',
     '-gencode', 'arch=compute_35,code=sm_35',
-    '-gencode', 'arch=compute_37,code=sm_37'
-    ]
-cc5 = [
+    '-gencode', 'arch=compute_37,code=sm_37',
     '-gencode', 'arch=compute_50,code=sm_50',
     '-gencode', 'arch=compute_52,code=sm_52',
-    '-gencode', 'arch=compute_53,code=sm_53'
-    ]
-cc6 = [
+    '-gencode', 'arch=compute_53,code=sm_53',
     '-gencode', 'arch=compute_60,code=sm_60',
     '-gencode', 'arch=compute_61,code=sm_61',
-    '-gencode', 'arch=compute_62,code=sm_62'
-    ]
-
+    '-gencode', 'arch=compute_62,code=sm_62',
+    '-gencode', 'arch=compute_70,code=sm_70',
+    '-gencode', 'arch=compute_72,code=sm_72',
+    '-gencode', 'arch=compute_75,code=sm_75',
+    '-gencode', 'arch=compute_80,code=sm_80',
+    '-gencode', 'arch=compute_86,code=sm_86'
+]
 if cuver == '8.0':
-    archflg = cc3 + cc5 + cc6
+    archflg = cc[0:20]
 elif cuver == '9.0' or cuver == '9.1' or cuver == '9.2':
-    archflg = cc3 + cc5 + cc6 + [
-        '-gencode', 'arch=compute_70,code=sm_70',
-        '-gencode', 'arch=compute_72,code=sm_72',
-    ]
+    archflg = cc[0:24]
 elif cuver == '10.0' or cuver == '10.1' or cuver == '10.2':
-    archflg = cc3 + cc5 + cc6 + [
-        '-gencode', 'arch=compute_70,code=sm_70',
-        '-gencode', 'arch=compute_72,code=sm_72',
-        '-gencode', 'arch=compute_75,code=sm_75'
-    ]
+    archflg = cc[0:26]
+elif cuver == '11.0':
+    archflg = cc[4:28]
+elif cuver == '11.1' or cuver == '11.2' or cuver == '11.3' or cuver == '11.4':
+    archflg = cc[4:30]
 else:
-    archflg = cc3 + cc5
+    archflg = cc[8:30]
 
 
 gcc_flags = ['-shared', '-O2', '-fno-strict-aliasing']
