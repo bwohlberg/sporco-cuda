@@ -29,7 +29,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDN(D, s, lmbda, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -48,7 +48,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDN(D, s, lmbda, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -87,7 +87,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDN(D, s, lmbda, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdn(D, s, lmbda, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-6)
 
 
 
@@ -106,7 +106,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -126,7 +126,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -146,7 +146,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -166,7 +166,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -187,7 +187,7 @@ class TestSet01(object):
         b = cbpdn.ConvBPDNGradReg(D, s, lmbda, mu, opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdngrd(D, s, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -207,7 +207,7 @@ class TestSet01(object):
         b = cbpdn.AddMaskSim(cbpdn.ConvBPDN, D, s, msk, lmbda, opt=opt)
         X1 = b.solve()
         X2 = cucbpdn.cbpdnmsk(D, s, msk, lmbda, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -238,7 +238,7 @@ class TestSet01(object):
         X1 = b.solve()
         opt['L1Weight'] = Wl1
         X2 = cucbpdn.cbpdnmsk(D, s, msk, lmbda, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -268,7 +268,7 @@ class TestSet01(object):
         X1 = b.solve()
         opt['GradWeight'] = 1.0
         X2 = cucbpdn.cbpdngrdmsk(D, s, msk, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -309,7 +309,7 @@ class TestSet01(object):
         opt['L1Weight'] = Wl1
         opt['GradWeight'] = 1.0
         X2 = cucbpdn.cbpdngrdmsk(D, s, msk, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
 
 
 
@@ -341,4 +341,4 @@ class TestSet01(object):
         X1 = b.solve()
         opt['GradWeight'] = Wgrd
         X2 = cucbpdn.cbpdngrdmsk(D, s, msk, lmbda, mu, opt)
-        assert(sm.mse(X1, X2) < 1e-10)
+        assert(sm.mse(X1, X2) < 1e-8)
