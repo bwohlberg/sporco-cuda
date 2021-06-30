@@ -6,7 +6,7 @@ import numpy as np
 from sporco.admm import cbpdn
 import sporco_cuda.cbpdn as cucbpdn
 import sporco.metric as sm
-import sporco.util as su
+import sporco.signal as ss
 
 
 
@@ -199,7 +199,7 @@ class TestSet01(object):
         D = np.random.randn(Nd, Nd, M).astype(np.float32)
         s = np.random.randn(Nr, Nc).astype(np.float32)
         frc = 0.5
-        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        msk = ss.rndmask(s.shape, frc, dtype=np.float32)
         s *= msk
         lmbda = 1e-1
         opt = cbpdn.ConvBPDN.Options({'Verbose': False, 'MaxMainIter': 50,
@@ -219,7 +219,7 @@ class TestSet01(object):
         D = np.random.randn(Nd, Nd, M).astype(np.float32)
         s = np.random.randn(Nr, Nc).astype(np.float32)
         frc = 0.5
-        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        msk = ss.rndmask(s.shape, frc, dtype=np.float32)
         s *= msk
         lmbda = 1e-1
         # Create a random ℓ1 term weighting array. There is no need to
@@ -250,7 +250,7 @@ class TestSet01(object):
         D = np.random.randn(Nd, Nd, M).astype(np.float32)
         s = np.random.randn(Nr, Nc).astype(np.float32)
         frc = 0.5
-        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        msk = ss.rndmask(s.shape, frc, dtype=np.float32)
         s *= msk
         lmbda = 1e-1
         mu = 1e-2
@@ -280,7 +280,7 @@ class TestSet01(object):
         D = np.random.randn(Nd, Nd, M).astype(np.float32)
         s = np.random.randn(Nr, Nc).astype(np.float32)
         frc = 0.5
-        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        msk = ss.rndmask(s.shape, frc, dtype=np.float32)
         s *= msk
         lmbda = 1e-1
         mu = 1e-2
@@ -321,7 +321,7 @@ class TestSet01(object):
         D = np.random.randn(Nd, Nd, M).astype(np.float32)
         s = np.random.randn(Nr, Nc).astype(np.float32)
         frc = 0.5
-        msk = su.rndmask(s.shape, frc, dtype=np.float32)
+        msk = ss.rndmask(s.shape, frc, dtype=np.float32)
         s *= msk
         lmbda = 1e-1
         mu = 1e-2
