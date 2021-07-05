@@ -13,7 +13,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from sporco inport util, signal
+from sporco import util, signal
 from sporco.admm import cbpdn
 import sporco_cuda.cbpdn as cucbpdn
 
