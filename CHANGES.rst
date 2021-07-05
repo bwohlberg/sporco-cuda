@@ -6,6 +6,8 @@ SPORCO-CUDA Release Notes
 Version 0.0.6   (not yet released)
 ----------------------------------
 
+• Update cuda arch codes in setup
+• Resolve deprecation warnings due to changes in sporco
 
 
 Version 0.0.5   (2020-06-22)
