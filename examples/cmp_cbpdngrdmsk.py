@@ -33,7 +33,7 @@ sl, sh = signal.tikhonov_filter(img, fltlmbd, npd)
 # Apply random mask to highpass component
 frc = 0.5
 np.random.seed(12345)
-msk = util.rndmask(img.shape, frc, dtype=np.float32)
+msk = signal.rndmask(img.shape, frc, dtype=np.float32)
 shw = msk * sh
 
 

@@ -15,8 +15,7 @@ import os
 import tempfile
 import numpy as np
 
-from sporco import util
-from sporco import plot
+from sporco import util, fft, plot
 import sporco.linalg as spl
 from sporco.admm import cbpdn
 import sporco_cuda.cbpdn as cucbpdn
@@ -73,7 +72,7 @@ print("GPU ConvBPDNGradReg solve time: %.2fs" % t.elapsed())
 
 
 # Reconstruct the image from the sparse representation
-imgr = np.sum(spl.fftconv(D, X), axis=2)
+imgr = np.sum(fft.fftconv(D, X), axis=2)
 
 
 # Display representation and reconstructed image.
