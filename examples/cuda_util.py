@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017 by Brendt Wohlberg <brendt@ieee.org>
+# Copyright (C) 2017, 2021 by Brendt Wohlberg <brendt@ieee.org>
 # All rights reserved. BSD 3-clause License.
 # This file is part of the SPORCO-CUDA package. Details of the copyright
 # and user license can be found in the 'LICENSE.txt' file distributed
@@ -9,7 +9,6 @@
 """Usage example: CUDA utility functions"""
 
 from __future__ import print_function
-from builtins import input
 from builtins import range
 
 import sporco_cuda.util as cu

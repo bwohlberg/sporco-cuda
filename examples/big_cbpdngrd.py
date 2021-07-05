@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017-2018 by Brendt Wohlberg <brendt@ieee.org>
+# Copyright (C) 2017-2018, 2021 by Brendt Wohlberg <brendt@ieee.org>
 # All rights reserved. BSD 3-clause License.
 # This file is part of the SPORCO-CUDA package. Details of the copyright
 # and user license can be found in the 'LICENSE.txt' file distributed
@@ -10,7 +10,6 @@
 
 from __future__ import print_function
 from builtins import input
-from builtins import range
 
 import os
 import tempfile
@@ -77,7 +76,7 @@ print("GPU ConvBPDNGradReg solve time: %.2fs" % t.elapsed())
 imgr = np.sum(spl.fftconv(D, X), axis=2)
 
 
-#Display representation and reconstructed image.
+# Display representation and reconstructed image.
 fig = plot.figure(figsize=(14, 14))
 plot.subplot(2, 2, 1)
 plot.imview(X[..., 0].squeeze(), fig=fig, title='Lowpass component')

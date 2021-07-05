@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017-2018 by Brendt Wohlberg <brendt@ieee.org>
+# Copyright (C) 2017-2018, 2021 by Brendt Wohlberg <brendt@ieee.org>
 # All rights reserved. BSD 3-clause License.
 # This file is part of the SPORCO-CUDA package. Details of the copyright
 # and user license can be found in the 'LICENSE.txt' file distributed
@@ -10,14 +10,12 @@
 
 from __future__ import print_function
 from builtins import input
-from builtins import range
 
 import os
 import tempfile
 import numpy as np
 
-from sporco import util
-from sporco import plot
+from sporco import util, signal, plot
 import sporco.linalg as spl
 from sporco.admm import cbpdn
 import sporco_cuda.cbpdn as cucbpdn
@@ -45,7 +43,7 @@ img = ei.image('IMG0023.tif', scaled=True, zoom=0.5)
 # Highpass filter test image
 npd = 16
 fltlmbd = 5
-sl, sh = util.tikhonov_filter(img, fltlmbd, npd)
+sl, sh = signal.tikhonov_filter(img, fltlmbd, npd)
 
 
 # Load dictionary
@@ -73,7 +71,7 @@ shr = np.sum(spl.fftconv(D, X), axis=2)
 imgr = sl + shr
 
 
-#Display representation and reconstructed image.
+# Display representation and reconstructed image.
 fig = plot.figure(figsize=(14, 14))
 plot.subplot(2, 2, 1)
 plot.imview(sl, fig=fig, title='Lowpass component')

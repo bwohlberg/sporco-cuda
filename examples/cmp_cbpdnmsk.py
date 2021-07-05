@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017-2018 by Brendt Wohlberg <brendt@ieee.org>
+# Copyright (C) 2017-2018, 2021 by Brendt Wohlberg <brendt@ieee.org>
 # All rights reserved. BSD 3-clause License.
 # This file is part of the SPORCO-CUDA package. Details of the copyright
 # and user license can be found in the 'LICENSE.txt' file distributed
@@ -10,13 +10,10 @@
 solvers"""
 
 from __future__ import print_function
-from builtins import input
-from builtins import range
 
 import numpy as np
 
-from sporco import util
-from sporco import plot
+from sporco import util, signal
 from sporco.admm import cbpdn
 import sporco.metric as sm
 
@@ -30,7 +27,7 @@ img = util.ExampleImages().image('barbara.png', scaled=True, gray=True)
 # Highpass filter test image
 npd = 16
 fltlmbd = 5
-sl, sh = util.tikhonov_filter(img, fltlmbd, npd)
+sl, sh = signal.tikhonov_filter(img, fltlmbd, npd)
 
 
 # Apply random mask to highpass component
